@@ -1,0 +1,346 @@
+{
+  "competitor_offers": {
+    "name": "competitor_offers",
+    "item_selectors": [
+      ".offer-card",
+      "[data-offer]",
+      "article.deal"
+    ],
+    "entity_fields": [
+      "competitor",
+      "offer_name"
+    ],
+    "fields": {
+      "competitor": {
+        "selectors": [
+          "[data-competitor]"
+        ],
+        "attr": "data-competitor",
+        "kind": "text",
+        "required": true
+      },
+      "offer_name": {
+        "selectors": [
+          ".offer-title",
+          ".deal-name",
+          "h3"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "destination": {
+        "selectors": [
+          ".destination",
+          "[data-destination]"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "price": {
+        "selectors": [
+          ".price",
+          ".deal-price",
+          "[data-price]"
+        ],
+        "attr": null,
+        "kind": "price",
+        "required": true
+      },
+      "discount": {
+        "selectors": [
+          ".discount",
+          ".badge"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": false
+      },
+      "validity": {
+        "selectors": [
+          ".validity",
+          "time"
+        ],
+        "attr": null,
+        "kind": "date",
+        "required": false
+      },
+      "cta": {
+        "selectors": [
+          ".cta",
+          "a.button",
+          "button"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": false
+      }
+    },
+    "compare_fields": [
+      "price",
+      "discount",
+      "validity",
+      "cta"
+    ],
+    "page_level": false
+  },
+  "hotel_pricing": {
+    "name": "hotel_pricing",
+    "item_selectors": [
+      ".hotel",
+      ".property-card",
+      "[data-hotel]"
+    ],
+    "entity_fields": [
+      "city",
+      "hotel",
+      "stay_date"
+    ],
+    "fields": {
+      "hotel": {
+        "selectors": [
+          ".hotel-name",
+          ".property-title",
+          "h3"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "city": {
+        "selectors": [
+          "[data-city]"
+        ],
+        "attr": "data-city",
+        "kind": "text",
+        "required": true
+      },
+      "stay_date": {
+        "selectors": [
+          "[data-stay-date]"
+        ],
+        "attr": "data-stay-date",
+        "kind": "date",
+        "required": true
+      },
+      "price": {
+        "selectors": [
+          ".price",
+          ".rate-amount",
+          "[data-rate]"
+        ],
+        "attr": null,
+        "kind": "price",
+        "required": true
+      },
+      "availability": {
+        "selectors": [
+          ".availability",
+          ".rooms-left",
+          ".status"
+        ],
+        "attr": null,
+        "kind": "availability",
+        "required": true
+      },
+      "occupancy": {
+        "selectors": [
+          ".occupancy"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": false
+      }
+    },
+    "compare_fields": [
+      "price",
+      "availability"
+    ],
+    "page_level": false
+  },
+  "campaign_page": {
+    "name": "campaign_page",
+    "item_selectors": [
+      "main",
+      "body"
+    ],
+    "entity_fields": [
+      "campaign"
+    ],
+    "fields": {
+      "campaign": {
+        "selectors": [
+          "[data-campaign]"
+        ],
+        "attr": "data-campaign",
+        "kind": "text",
+        "required": true
+      },
+      "headline": {
+        "selectors": [
+          "h1.headline",
+          "h1"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "offer_text": {
+        "selectors": [
+          ".offer-text",
+          ".hero p"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "cta": {
+        "selectors": [
+          ".cta",
+          "a.button"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "placement": {
+        "selectors": [
+          "[data-position]"
+        ],
+        "attr": "data-position",
+        "kind": "text",
+        "required": false
+      },
+      "validity": {
+        "selectors": [
+          ".validity"
+        ],
+        "attr": null,
+        "kind": "date",
+        "required": false
+      }
+    },
+    "compare_fields": [
+      "headline",
+      "offer_text",
+      "cta",
+      "placement",
+      "validity"
+    ],
+    "page_level": true
+  },
+  "partner_updates": {
+    "name": "partner_updates",
+    "item_selectors": [
+      "article.update",
+      ".update-item"
+    ],
+    "entity_fields": [
+      "partner",
+      "title"
+    ],
+    "fields": {
+      "partner": {
+        "selectors": [
+          "[data-partner]"
+        ],
+        "attr": "data-partner",
+        "kind": "text",
+        "required": true
+      },
+      "title": {
+        "selectors": [
+          "h3",
+          ".update-title"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "published": {
+        "selectors": [
+          "time"
+        ],
+        "attr": "datetime",
+        "kind": "date",
+        "required": true
+      },
+      "content": {
+        "selectors": [
+          "p",
+          ".body"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "category": {
+        "selectors": [
+          ".category"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": false
+      }
+    },
+    "compare_fields": [
+      "content",
+      "published"
+    ],
+    "page_level": false
+  },
+  "travel_trends": {
+    "name": "travel_trends",
+    "item_selectors": [
+      "tr.signal",
+      ".trend-row"
+    ],
+    "entity_fields": [
+      "destination"
+    ],
+    "fields": {
+      "destination": {
+        "selectors": [
+          ".dest",
+          "td:nth-of-type(1)"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": true
+      },
+      "search_index": {
+        "selectors": [
+          ".index",
+          "td:nth-of-type(2)"
+        ],
+        "attr": null,
+        "kind": "int",
+        "required": true
+      },
+      "event": {
+        "selectors": [
+          ".event",
+          "td:nth-of-type(3)"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": false
+      },
+      "trend": {
+        "selectors": [
+          ".trend",
+          "td:nth-of-type(4)"
+        ],
+        "attr": null,
+        "kind": "text",
+        "required": false
+      }
+    },
+    "compare_fields": [
+      "search_index",
+      "event"
+    ],
+    "page_level": false
+  }
+}

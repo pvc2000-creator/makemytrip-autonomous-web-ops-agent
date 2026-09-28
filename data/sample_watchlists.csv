@@ -1,0 +1,9 @@
+watchlist,entity_type,entity,url_pattern,frequency,owner
+priority_destinations,destination,Goa,{BASE}/mock/offers/*,daily,Growth
+priority_destinations,destination,Dubai,{BASE}/mock/offers/*,daily,Growth
+priority_destinations,destination,Bali,{BASE}/mock/offers/*,daily,Growth
+hotel_watch,hotel,Sea Breeze Resort,{BASE}/mock/hotels/goa,hourly,Pricing & Revenue
+hotel_watch,hotel,Pink City Haveli,{BASE}/mock/hotels/jaipur,hourly,Pricing & Revenue
+hotel_watch,hotel,Marina View Suites,{BASE}/mock/hotels/dubai,hourly,Pricing & Revenue
+campaigns,campaign,summer-sale,{BASE}/mock/campaign/summer-sale,campaign,Marketing Ops
+campaigns,campaign,diwali-getaways,{BASE}/mock/campaign/diwali-getaways,campaign,Marketing Ops

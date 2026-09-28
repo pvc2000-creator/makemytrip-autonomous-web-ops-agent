@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Web Ops Agent · MakeMyTrip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1EF; --panel:#FFFFFF; --panel-2:#F6F8F7; --ink:#17212B; --muted:#5E6A73; --line:#D6DCDD;
+  --route:#2356A8; --route-soft:#DCE6F5; --amber:#B97C0C; --amber-soft:#F8ECD2; --red:#B8432F; --red-soft:#F6DFD9;
+  --green:#2F7D55; --green-soft:#DAEEE2; --focus:#2356A8;
+  --sans:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12181D; --panel:#1A2228; --panel-2:#1F2830; --ink:#E7ECEE; --muted:#95A2AB; --line:#2E3A42;
+  --route:#7FA7E8; --route-soft:#22324A; --amber:#E0A93D; --amber-soft:#3A2F17; --red:#E07A63; --red-soft:#3D221D;
+  --green:#6CC495; --green-soft:#1C3527; --focus:#7FA7E8;}}
+:root[data-theme="dark"]{
+  --bg:#12181D; --panel:#1A2228; --panel-2:#1F2830; --ink:#E7ECEE; --muted:#95A2AB; --line:#2E3A42;
+  --route:#7FA7E8; --route-soft:#22324A; --amber:#E0A93D; --amber-soft:#3A2F17; --red:#E07A63; --red-soft:#3D221D;
+  --green:#6CC495; --green-soft:#1C3527; --focus:#7FA7E8;}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--sans);min-height:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+a{color:var(--route)}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+nav.rail{background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
+.brand{font:700 20px/1.1 var(--cond);letter-spacing:.2px;padding:0 10px 18px}
+.brand small{display:block;font:500 13px var(--sans);color:var(--muted);margin-top:4px}
+.rail button{all:unset;cursor:pointer;padding:9px 10px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.rail button:hover{background:var(--panel-2)}
+.rail button[aria-current="page"]{background:var(--route-soft);color:var(--route);font-weight:600}
+.rail button:focus-visible{outline:2px solid var(--focus)}
+.count{font:600 13px var(--cond);background:var(--amber-soft);color:var(--amber);border-radius:10px;padding:0 7px}
+.rail .foot{margin-top:auto;font-size:13px;color:var(--muted);padding:10px;border-top:1px solid var(--line)}
+.rail .foot label{display:block;margin-top:8px}
+.rail select{width:100%;margin-top:3px;padding:5px;border:1px solid var(--line);border-radius:5px;background:var(--panel)}
+main{padding:28px clamp(16px,3vw,40px) 60px;max-width:1280px;width:100%;min-width:0}
+h1{font:700 30px/1.15 var(--cond);margin:0 0 4px}
+h2{font:600 19px/1.3 var(--sans);margin:0 0 12px}
+h3{font:600 15px/1.3 var(--sans);margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 22px;max-width:72ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.gplan{grid-template-columns:2fr 1fr}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.btn{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:var(--panel-2)}
+.btn.primary{background:var(--route);border-color:var(--route);color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+:root[data-theme="dark"] .btn.primary,:root:not([data-theme="light"]) .btn.primary{color:#fff}
+.btn.warn{border-color:var(--red);color:var(--red)}
+.btn.small{padding:4px 9px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* stats strip: figures in condensed type */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,45%),1fr));border:1px solid var(--line);border-radius:8px;background:var(--panel);margin-bottom:16px}
+.stat{padding:14px 16px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font:600 30px/1 var(--cond)}
+.stat span{color:var(--muted);font-size:13px}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--panel-2)}
+.num{font-family:var(--cond);font-size:16px;font-weight:600;white-space:nowrap}
+.chip{display:inline-block;font:600 12.5px/1.6 var(--sans);padding:0 8px;border-radius:10px;white-space:nowrap;background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.chip.completed,.chip.material-good{background:var(--green-soft);color:var(--green);border-color:transparent}
+.chip.pending_review,.chip.awaiting_approval,.chip.review{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.chip.failed,.chip.material{background:var(--red-soft);color:var(--red);border-color:transparent}
+.chip.running{background:var(--route-soft);color:var(--route);border-color:transparent}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.url{font-size:13px;color:var(--muted);word-break:break-all}
+/* route strip */
+.route{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px 20px 16px;margin-bottom:16px;overflow-x:auto}
+.route ol{list-style:none;margin:0;padding:0;display:flex;min-width:760px;position:relative}
+.route li{flex:1;position:relative;text-align:center;font:600 14px/1.2 var(--cond);color:var(--muted);padding-top:26px}
+.route li::before{content:"";position:absolute;top:8px;left:0;right:0;height:3px;background:var(--line)}
+.route li:first-child::before{left:50%}
+.route li:last-child::before{right:50%}
+.route li::after{content:"";position:absolute;top:2px;left:calc(50% - 8px);width:16px;height:16px;border-radius:50%;background:var(--panel);border:3px solid var(--line)}
+.route li.done{color:var(--ink)}
+.route li.done::before{background:var(--route)}
+.route li.done::after{background:var(--route);border-color:var(--route)}
+.route li.now{color:var(--route)}
+.route li.now::before{background:linear-gradient(90deg,var(--route) 50%,var(--line) 50%)}
+.route li.now::after{border-color:var(--route);box-shadow:0 0 0 5px var(--route-soft);animation:pulse 1.4s ease-in-out infinite}
+.route li.halt::after{border-color:var(--amber);background:var(--amber)}
+.route li.fail::after{border-color:var(--red);background:var(--red)}
+.route li.halt{color:var(--amber)} .route li.fail{color:var(--red)}
+.route li small{display:block;font:500 12px var(--sans);color:var(--muted);margin-top:3px}
+.loopnote{margin-top:12px;font-size:13px;color:var(--route);display:flex;gap:6px;align-items:center}
+@keyframes pulse{50%{box-shadow:0 0 0 9px transparent}}
+@media (prefers-reduced-motion:reduce){.route li.now::after{animation:none}}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{all:unset;cursor:pointer;padding:9px 14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--route)}
+.tabs button:focus-visible{outline:2px solid var(--focus)}
+.log{font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-height:520px;overflow:auto;background:var(--panel-2);border-radius:6px;padding:10px 12px}
+.log div{padding:2px 0;display:grid;grid-template-columns:70px 64px 1fr;gap:8px}
+@media (max-width:860px){.log div{grid-template-columns:62px 1fr}.log div span:nth-child(2){display:none}}
+.log .k-warning{color:var(--amber)} .log .k-error{color:var(--red)} .log .k-state{color:var(--route)}
+.conf{display:inline-flex;align-items:center;gap:6px}
+.conf i{display:inline-block;width:46px;height:6px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.conf i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--c)}
+.headline{font:600 24px/1.25 var(--cond);margin:0 0 10px}
+.summary ul{margin:6px 0 14px;padding-left:20px}
+.summary li{margin:3px 0}
+.flag{border-left:3px solid var(--amber);background:var(--amber-soft);padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:14px}
+.flag.bad{border-color:var(--red);background:var(--red-soft)}
+.flag.ok{border-color:var(--green);background:var(--green-soft)}
+form.intake{display:grid;gap:14px;max-width:760px}
+form.intake label{display:grid;gap:5px;font-weight:600}
+form.intake .hint{font-weight:400;color:var(--muted);font-size:13px}
+input[type=text],select,textarea{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:9px 10px;width:100%}
+textarea{min-height:84px;resize:vertical}
+.check{display:flex!important;grid-template-columns:none;align-items:center;gap:8px;font-weight:500!important}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{display:grid;grid-template-columns:34px 130px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.steps li::before{counter-increment:s;content:counter(s);font:600 15px var(--cond);color:var(--muted)}
+.tool{font:600 14px var(--cond);color:var(--route)}
+.empty{padding:26px;text-align:center;color:var(--muted)}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));right:20px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-weight:500;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1;transform:none}
+.mode{font-size:12.5px;border-radius:5px;padding:6px 8px;background:var(--panel-2);margin-bottom:6px}
+.market{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.menu{display:none}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  nav.rail{position:fixed;inset:0 auto 0 0;width:250px;z-index:5;transform:translateX(-100%);transition:transform .2s;padding-top:calc(20px + env(safe-area-inset-top,0px))}
+  nav.rail.open{transform:none;box-shadow:0 0 0 100vw rgba(0,0,0,.3)}
+  .menu{display:inline-block;margin-bottom:14px}
+  .pair,.gplan{grid-template-columns:1fr}
+  .stat{border-bottom:1px solid var(--line)}
+  h1{font-size:26px}
+  .steps li{grid-template-columns:28px 1fr}.steps li span:last-child{grid-column:2}
+}
+
+/* live browser */
+.livegrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.browser{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.browser .bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:6px}.dots i{width:11px;height:11px;border-radius:50%;background:var(--line);display:block}
+.urlbar{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:3px 12px;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewport{aspect-ratio:1280/800;background:#fff;display:flex;align-items:center;justify-content:center;position:relative}
+.viewport img,.viewport iframe{width:100%;height:100%;object-fit:contain;border:0;display:block}
+.viewport .placeholder{color:var(--muted);padding:30px;text-align:center;max-width:46ch}
+.livecap{margin:10px 2px 6px;font:600 17px/1.35 var(--cond);min-height:1.4em}
+.replay{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.replay input{flex:1}
+.stepl{list-style:none;margin:0;padding:0;max-height:430px;overflow:auto}
+.stepl li{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.stepl li:last-child{border-bottom:0}
+.stepl .ic{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);margin-top:2px}
+.stepl li[data-st=done] .ic{background:var(--green);border-color:var(--green)}
+.stepl li[data-st=running] .ic{border-color:var(--route);box-shadow:0 0 0 4px var(--route-soft);animation:pulse 1.4s infinite}
+.stepl li[data-st=failed] .ic{background:var(--red);border-color:var(--red)}
+.stepl li[data-st=skipped] .ic,.stepl li[data-st=stopped] .ic{background:var(--line)}
+.stepl li[data-st=running]{color:var(--route);font-weight:600}
+.stepl .tl{font:600 13px var(--cond);color:var(--muted)}
+.ctlbar{display:flex;gap:8px;flex-wrap:wrap}
+.approval{border:2px solid var(--amber);background:var(--amber-soft);border-radius:8px;padding:14px;margin-bottom:12px}
+.approval p{margin:6px 0 10px;font-weight:600}
+.approval input{width:100%;margin-bottom:8px;border:1px solid var(--line);border-radius:6px;padding:7px;background:var(--panel)}
+.outcome{border-left:4px solid var(--green);background:var(--green-soft);padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:14px}
+.outcome.no{border-color:var(--amber);background:var(--amber-soft)}
+.outcome .ref{font:700 28px var(--cond);letter-spacing:1px}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:16px}
+.wall .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer}
+.wall .thumb{aspect-ratio:1280/800;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
+.wall .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.wall .meta{padding:10px 12px}
+.wall .meta .cap{font-size:13px;color:var(--muted);margin-top:3px;min-height:2.6em}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:20px;max-width:440px;width:92vw}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog label{display:flex;gap:8px;align-items:center;margin:10px 0}
+dialog select{width:auto}
+.kind{font:600 12px var(--sans);padding:0 7px;border-radius:9px;background:var(--route-soft);color:var(--route)}
+.kind.transaction{background:var(--amber-soft);color:var(--amber)}
+@media (max-width:980px){.livegrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" id="rail" aria-label="Main">
+    <div class="brand">Web Ops Agent<small>MakeMyTrip growth &amp; operations</small></div>
+    <button data-view="dashboard">Operations overview</button>
+    <button data-view="wall">Live browsers <span class="count" id="liveCount" hidden style="background:var(--route-soft);color:var(--route)"></span></button>
+    <button data-view="tasks">Workflows</button>
+    <button data-view="new">New workflow</button>
+    <button data-view="runs">Run history</button>
+    <button data-view="review">Review queue <span class="count" id="reviewCount" hidden></span></button>
+    <a id="sitesLink" href="/mock" target="_blank" rel="noopener" hidden style="padding:9px 10px;border-radius:6px;color:inherit;text-decoration:none;font-weight:500">Demo websites ↗</a>
+    <div class="foot">
+      <div class="mode" id="modeNote"></div>
+      <label>Acting as
+        <select id="role"><option value="admin">Administrator</option><option value="creator">Task creator</option><option value="reviewer">Reviewer</option></select>
+      </label>
+      <label>Theme
+        <select id="theme"><option value="">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+      </label>
+    </div>
+  </nav>
+  <main id="main" tabindex="-1"></main>
+</div>
+<dialog id="runDlg"><form method="dialog"><h2 style="margin-top:0">Run options</h2>
+<p class="small muted" id="runDlgName"></p>
+<label>Speed <select id="optSpeed"><option value="fast">Fast</option><option value="normal" selected>Normal</option><option value="slow">Slow (easy to follow)</option></select></label>
+<label><input type="checkbox" id="optHeaded"> Also open a visible Chrome window on this computer</label>
+<label><input type="checkbox" id="optStep"> Step through one action at a time</label>
+<p class="small muted">The live browser view in this app works either way. A visible window needs the backend on the same computer.</p>
+<div class="row"><button class="btn primary" value="go" id="runDlgGo">Start run</button><button class="btn" value="cancel">Cancel</button></div></form></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   Shared pipeline definitions (mirrors backend/extraction + agents)
+   ===================================================================== */
+const STATES = ["task_intake","plan_generated","awaiting_approval","browser_execution","awaiting_input","extraction","comparison","reasoning","completion"];
+const STATE_LABEL = {task_intake:"Intake",plan_generated:"Plan",awaiting_approval:"Approval",awaiting_input:"Your approval",stopped:"Stopped",browser_execution:"Browse",extraction:"Extract",comparison:"Compare",reasoning:"Reason",completion:"Complete",completed:"Completed",pending_review:"Needs review",failed:"Failed"};
+const TERMINAL = new Set(["completed","pending_review","failed","stopped"]);
+const TEMPLATE_LABEL = {hotel_booking:"Hotel booking",train_availability:"Train seat availability",activity_listings:"Activities and tours",review_watch:"Hotel reviews watch",advisory_watch:"Travel advisory watch",flight_booking:"Flight booking",flight_fares:"Flight fare search",hotel_listings:"Hotel search and filter",book_listings:"Catalogue scan",custom:"Custom steps",competitor_offers:"Competitor offers",hotel_pricing:"Hotel pricing",campaign_page:"Campaign page",partner_updates:"Partner updates",travel_trends:"Travel trends"};
+const F=(selectors,o={})=>({selectors,attr:o.attr||null,kind:o.kind||"text",required:o.required!==false});
+const SCHEMAS = {
+  competitor_offers:{item:[".offer-card","[data-offer]","article.deal"],entity:["competitor","offer_name"],compare:["price","discount","validity","cta"],fields:{
+    competitor:F(["[data-competitor]"],{attr:"data-competitor"}),offer_name:F([".offer-title",".deal-name","h3"]),destination:F([".destination","[data-destination]"]),
+    price:F([".price",".deal-price","[data-price]"],{kind:"price"}),discount:F([".discount",".badge"],{required:false}),validity:F([".validity","time"],{kind:"date",required:false}),cta:F([".cta","a.button","button"],{required:false})}},
+  hotel_pricing:{item:[".hotel",".property-card","[data-hotel]"],entity:["city","hotel","stay_date"],compare:["price","availability"],fields:{
+    hotel:F([".hotel-name",".property-title","h3"]),city:F(["[data-city]"],{attr:"data-city"}),stay_date:F(["[data-stay-date]"],{attr:"data-stay-date",kind:"date"}),
+    price:F([".price",".rate-amount","[data-rate]"],{kind:"price"}),availability:F([".availability",".rooms-left",".status"],{kind:"availability"}),occupancy:F([".occupancy"],{required:false})}},
+  campaign_page:{item:["main","body"],entity:["campaign"],compare:["headline","offer_text","cta","placement","validity"],page:true,fields:{
+    campaign:F(["[data-campaign]"],{attr:"data-campaign"}),headline:F(["h1.headline","h1"]),offer_text:F([".offer-text",".hero p"]),cta:F([".cta","a.button"]),
+    placement:F(["[data-position]"],{attr:"data-position",required:false}),validity:F([".validity"],{kind:"date",required:false})}},
+  partner_updates:{item:["article.update",".update-item"],entity:["partner","title"],compare:["content","published"],fields:{
+    partner:F(["[data-partner]"],{attr:"data-partner"}),title:F(["h3",".update-title"]),published:F(["time"],{attr:"datetime",kind:"date"}),content:F(["p",".body"]),category:F([".category"],{required:false})}},
+  travel_trends:{item:["tr.signal",".trend-row"],entity:["destination"],compare:["search_index","event"],fields:{
+    destination:F([".dest","td:nth-of-type(1)"]),search_index:F([".index","td:nth-of-type(2)"],{kind:"int"}),event:F([".event","td:nth-of-type(3)"],{required:false}),trend:F([".trend","td:nth-of-type(4)"],{required:false})}},
+};
+const OWNERS={competitor_offers:"Growth",hotel_pricing:"Pricing & Revenue",campaign_page:"Marketing Ops",partner_updates:"Partner Ops",travel_trends:"Business Strategy"};
+
+/* =====================================================================
+   Demo backend: runs the same pipeline in the browser when no API is reachable
+   ===================================================================== */
+const Demo = (() => {
+  const CFG={allow:["demo-sources.mmt.internal"],minConf:0.7,priceThr:3,trendThr:15,maxRetries:2};
+  const BASE="https://demo-sources.mmt.internal";
+  const db={tasks:[],plans:[],runs:[],events:[],records:[],comparisons:[],summaries:[],feedback:[],snapshots:[],tick:0};
+  let evId=0;
+  const id=p=>p+"_"+Math.random().toString(16).slice(2,12);
+  const iso=()=>new Date().toISOString();
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  function xmur(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return(h^=h>>>16)>>>0}}
+  function rng(...k){let a=xmur(k.join("|"))();return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const pick=(r,arr)=>arr[Math.floor(r()*arr.length)];
+  const addDays=d=>{const x=new Date();x.setDate(x.getDate()+d);return x};
+  const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const dmy=d=>`${String(d.getDate()).padStart(2,"0")} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+  const ymd=d=>d.toISOString().slice(0,10);
+  const fmtP=(a,s)=>{const n=Math.round(a).toLocaleString("en-IN");return[`₹ ${n}`,`INR ${Math.round(a)}`,`Rs.${n}/night`,n][s%4]};
+  const POPUP=`<div class="cookie-banner">We use cookies <button id="accept-cookies">Accept</button></div>`;
+  const DEMO_CSS=`*{box-sizing:border-box}body{margin:0;font:15px/1.5 "Segoe UI",system-ui,sans-serif;background:#f5f7fa;color:#18212b}
+  .hdr{background:#fff;border-bottom:1px solid #e6e9ee;padding:12px 24px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+  .hdr i{width:32px;height:32px;border-radius:9px;background:var(--b);display:inline-block}.hero{background:linear-gradient(120deg,var(--b2),var(--b));color:#fff;padding:28px 24px}
+  .hero h1{margin:0;font-size:30px}.wrap{max-width:1100px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .offer-card,.hotel,.property-card,article.update,main{background:#fff;border:1px solid #edf0f4;border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+  .offer-title,.hotel-name,.property-title{margin:0 0 6px;font-size:18px}.price,.rate-amount{display:block;font-size:22px;font-weight:800;margin:8px 0}
+  .discount,.category{display:inline-block;background:#ff4f79;color:#fff;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;margin-right:6px}
+  .validity,.destination,.availability,.status,.occupancy,time{display:block;color:#6b7684;font-size:13.5px}.cta{display:inline-block;margin-top:8px;background:#ff7a1a;color:#fff;padding:8px 14px;border-radius:9px;font-weight:700}
+  table{background:#fff;border-radius:14px;border-collapse:collapse;width:100%;grid-column:1/-1}td{padding:12px 14px;border-bottom:1px solid #f1f4f8}.index{font-weight:800}
+  .hero .headline{font-size:40px}.offer-text{font-size:18px}.cookie-banner{position:fixed;left:20px;right:20px;bottom:16px;max-width:620px;margin:auto;background:#fff;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.2);padding:12px 16px}
+  .cookie-banner button{background:var(--b);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700;margin-left:10px}`;
+  const BR={deals:["TripNova Holidays","#5b3cc4","#3d2791"],Hotels:["StayBay Hotels","#1d4ed8","#1e3a8a"],Partner:["PartnerHub","#0f766e","#134e4a"],Demand:["Wanderlytics","#0f172a","#020617"]};
+  const page=(title,body,attrs="")=>{const k=Object.keys(BR).find(x=>title.includes(x))||"Hotels";const [nm,b,b2]=title.includes("Summer")||title.includes("Diwali")||title.includes("Sale")||title.includes("skyroam")?["SkyRoam Travel","#0b6e75","#064a50"]:BR[k];
+    const inner=body.replace(/^<h1>(.*?)<\/h1>/,"").replace(/^<table>/,"<table>");const h=(body.match(/^<h1>(.*?)<\/h1>/)||[])[1]||"";
+    return`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>:root{--b:${b};--b2:${b2}}${DEMO_CSS}</style></head><body ${attrs}><div class="hdr"><i></i>${nm}</div>${h?`<div class="hero"><h1>${h}</h1></div>`:""}${inner.startsWith("<main")?inner:`<div class="wrap">${inner}</div>`}${POPUP}</body></html>`};
+
+  const COMP={tripnova:[["Goa Monsoon Escape","Goa",18999],["Kerala Backwaters 4N","Kochi",24999],["Dubai Shopping Fest","Dubai",45999],["Manali Snow Weekend","Manali",12999]],
+              skyroam:[["Bali Honeymoon 5N","Bali",62999],["Jaipur Heritage Stay","Jaipur",9999],["Andaman Dive Week","Port Blair",38999]]};
+  const HOT={goa:[["Sea Breeze Resort",7499],["Calangute Palms",5299],["Fort Aguada Retreat",14999]],jaipur:[["Pink City Haveli",4599],["Amber Courtyard",8999]],dubai:[["Marina View Suites",21999],["Deira Creek Inn",9499]]};
+  const CAMP={"summer-sale":[["Summer Sale: up to 40% off","Flights + hotels bundled for less","Explore deals","hero-top"],["Summer Sale extended!","Extra 5% off with UPI payments","Shop the sale","hero-top"],["Last 48 hours of Summer Sale","Extra 5% off with UPI payments","Shop the sale","banner-mid"]],
+              "diwali-getaways":[["Diwali Getaways","Festive stays from ₹3,999","Plan my trip","hero-top"],["Diwali Getaways","Festive stays from ₹3,499","Plan my trip","hero-top"]]};
+  const FEED=[["Sea Breeze Resort","Pool renovation","Main pool closed for renovation until month end.","Operations"],["Pink City Haveli","New cancellation policy","Free cancellation window changes from 48h to 24h.","Policy"],["Marina View Suites","Rate parity update","Weekend BAR rates revised for the next quarter.","Pricing"],["Calangute Palms","Monsoon package","Monsoon package with free breakfast is now live.","Offers"]];
+  const TR=[["Goa",72,"Sunburn Festival"],["Manali",55,""],["Dubai",64,"Shopping Festival"],["Bali",48,""],["Jaipur",41,"Literature Festival"]];
+
+  function serve(url){ // returns {status, html}
+    const u=new URL(url); const p=u.pathname.split("/").filter(Boolean); const t=db.tick;
+    if(p[0]==="blocked") return {status:403};
+    if(p[0]==="offers"&&COMP[p[1]]){
+      const disc=["10% off","Flat ₹2,000 off","Free airport transfer","15% off"]; const L=COMP[p[1]]; let cards=[];
+      L.forEach(([name,dest,base],i)=>{const r=rng(p[1],name,t);
+        if(p[1]==="skyroam"&&name.startsWith("Andaman")&&t%2===1)return;
+        const drift=t?1+pick(r,[0,0,0,0,-0.04,0.06,-0.12]):1; let d=disc[i%4]; if(t&&i===t%L.length)d=disc[(i+t)%4];
+        const cta=(t%3===2&&i===0)?"Grab the deal":"Book now"; const ext=(name.startsWith("Dubai")&&t>=2)?12:0;
+        cards.push(`<div class="offer-card"><h3 class="offer-title">${name}</h3><span class="destination">${dest}</span><div class="price">${fmtP(base*drift,i)}</div><span class="discount">${d}</span><span class="validity">Valid till ${dmy(addDays(30+ext))}</span><a class="cta">${cta}</a></div>`)});
+      if(p[1]==="tripnova"&&cards.length)cards.push(cards[0]);
+      if(t>=2&&p[1]==="tripnova")cards.push(`<div class="offer-card"><h3 class="offer-title">Ladakh Bike Trip</h3><span class="destination">Leh</span><div class="price">₹ 27,499</div><span class="discount">New launch</span><span class="validity">Valid till ${dmy(addDays(20))}</span><a class="cta">Book now</a></div>`);
+      return {status:200,html:page(`${p[1]} deals`,"<h1>Holiday deals</h1>"+cards.join(""),`data-competitor="${p[1]}"`)};
+    }
+    if(p[0]==="hotels"&&HOT[p[1]]){
+      const stay=ymd(addDays(14)); const red=p[1]==="goa"&&t%3===2;
+      const rows=HOT[p[1]].map(([name,base],i)=>{const r=rng(p[1],name,stay,t);const m=t?1+pick(r,[-0.08,-0.03,0,0,0.01,0.05,0.15]):1;const left=t?pick(r,[0,1,2,4,8,12]):8;
+        const av=left===0?"Sold out":left<=3?`Only ${left} rooms left`:`${left} rooms available`; const pr=fmtP(base*m,i+t);
+        return red?`<section class="property-card"><h3 class="property-title">${name}</h3><span class="rate-amount">${pr}</span><em class="status">${av}</em></section>`
+                  :`<div class="hotel"><h3 class="hotel-name">${name}</h3><div class="price">${pr}</div><div class="availability">${av}</div><div class="occupancy">2 adults, 1 room</div></div>`}).join("");
+      return {status:200,html:page(`Hotels in ${p[1]}`,`<h1>Hotels for ${stay}</h1>${rows}`,`data-city="${p[1]}" data-stay-date="${stay}"`)};
+    }
+    if(p[0]==="campaign"&&CAMP[p[1]]){const v=CAMP[p[1]];const [h,o,c,pos]=v[Math.min(t,v.length-1)];
+      return {status:200,html:page(h,`<main data-campaign="${p[1]}"><section class="hero" data-position="${pos}"><h1 class="headline">${h}</h1><p class="offer-text">${o}</p><a class="cta button">${c}</a><small class="validity">Ends ${dmy(addDays(10))}</small></section></main>`)}}
+    if(p[0]==="partners"){const items=FEED.slice(0,2+Math.min(t,2));
+      return {status:200,html:page("Partner updates",items.map(([pt,ti,tx,cat],i)=>`<article class="update" data-partner="${pt}"><h3>${ti}</h3><time datetime="${ymd(addDays(-(6-i)))}">x</time><p>${t>=3&&i===0?tx.replace("month end","the 15th"):tx}</p><span class="category">${cat}</span></article>`).join(""))}}
+    if(p[0]==="trends"){return {status:200,html:page("Demand",`<table>${TR.map(([d,b,e])=>{const r=rng("trend",d,t);const v=t?Math.floor(b*(1+pick(r,[-0.18,-0.05,0,0,0.05,0.25]))):b;
+      return `<tr class="signal"><td class="dest">${d}</td><td class="index">${v}</td><td class="event">${e}</td><td class="trend">${v>b?"rising":v<b?"falling":"flat"}</td></tr>`}).join("")}</table>`)}}
+    return {status:404};
+  }
+
+  // ---- normalizers & parser (ports of extraction/*) ----
+  const clean=s=>(s||"").replace(/\s+/g," ").trim();
+  function nPrice(raw){const t=clean(raw);if(!t)return[null,"price missing"];const l=t.toLowerCase();let cur=null,note="";
+    for(const[k,c] of [["₹","INR"],["inr","INR"],["rs","INR"],["$","USD"],["usd","USD"],["€","EUR"]]) if(l.includes(k)){cur=c;break}
+    if(!cur){cur="INR";note="currency not shown; assumed INR"} const m=t.match(/\d[\d,]*(\.\d+)?/);if(!m)return[null,`no number in '${t}'`];
+    const a=parseFloat(m[0].replace(/,/g,""));const fx={INR:1,USD:83,EUR:90}[cur];return[{amount:a,currency:cur,amount_inr:Math.round(a*fx*100)/100,raw:t},note]}
+  function nDate(raw){const t=clean(raw);if(!t)return[null,"date missing"];let m=t.match(/\d{4}-\d{2}-\d{2}/);if(m)return[m[0],""];
+    m=t.match(/(\d{1,2}) ([A-Za-z]{3})[a-z]* (\d{4})/);if(m){const mi=MON.indexOf(m[2]);if(mi>=0)return[`${m[3]}-${String(mi+1).padStart(2,"0")}-${m[1].padStart(2,"0")}`,""]}return[t,`unparsed date '${t}'`]}
+  function nAvail(raw){const t=clean(raw).toLowerCase();if(!t)return[null,"availability missing"];if(/sold out|unavailable|no rooms/.test(t))return[{status:"sold_out",rooms_left:0},""];
+    const m=t.match(/(\d+)\s*(rooms?|left)/);if(m){const n=+m[1];return[{status:n<=3?"limited":"available",rooms_left:n},""]}return[{status:"unknown",rooms_left:null},`unrecognized availability '${t}'`]}
+  function nInt(raw){const m=clean(raw).match(/-?\d[\d,]*/);return m?[parseInt(m[0].replace(/,/g,"")),""]:[null,"no integer"]}
+  const NORM={price:nPrice,date:nDate,availability:nAvail,int:nInt};
+  function find(node,spec,doc){for(const scope of [node,doc]){for(let i=0;i<spec.selectors.length;i++){const el=scope.querySelector(spec.selectors[i]);
+      if(!el&&scope===node&&spec.attr&&node.hasAttribute&&node.hasAttribute(spec.attr))return[node.getAttribute(spec.attr),false];
+      if(el){const raw=spec.attr?el.getAttribute(spec.attr):el.textContent.trim();if(raw)return[raw,i>0]}}}return[null,false]}
+  function hash(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return(h>>>0).toString(16)}
+  function parse(html,url,sname){const S=SCHEMAS[sname];const doc=new DOMParser().parseFromString(html,"text/html");const warn=[];let items=[],fb=false;
+    for(let i=0;i<S.item.length;i++){items=[...doc.querySelectorAll(S.item[i])];if(items.length){fb=i>0&&!S.page;if(fb)warn.push(`layout_changed: primary container '${S.item[0]}' missing, used '${S.item[i]}'`);break}}
+    if(S.page)items=items.slice(0,1); if(!items.length){warn.push("no_items: container selectors did not match");return[[],warn]}
+    const out=[],seen=new Set();
+    for(const node of items){let conf=1,notes=[],fields={};if(fb){conf-=.25;notes.push("container found via fallback selector")}
+      for(const[name,spec] of Object.entries(S.fields)){const[raw,f]=find(node,spec,doc);
+        if(raw==null){fields[name]=null;if(spec.required){conf-=.3;notes.push(`missing required field '${name}'`)}continue}
+        if(f){conf-=.1;notes.push(`'${name}' found via fallback selector`)}
+        if(NORM[spec.kind]){const[v,n]=NORM[spec.kind](raw);if(n){conf-=.1;notes.push(`${name}: ${n}`)}fields[name]=v}else{let v=clean(raw);if(name==="city")v=v[0].toUpperCase()+v.slice(1);fields[name]=v}}
+      const key=hash(S.entity.map(f=>String(fields[f]??"").toLowerCase()).join("|"));if(seen.has(key)){warn.push(`duplicate record skipped for entity ${key}`);continue}seen.add(key);
+      const pr=fields.price;if(pr&&sname==="hotel_pricing"&&(pr.amount_inr<500||pr.amount_inr>300000)){conf-=.3;notes.push("price outside plausible range")}
+      out.push({id:id("rec"),entity_key:key,entity:S.entity.map(f=>fields[f]??"?").join(" / "),fields,snippet:clean(node.textContent).slice(0,280),source_url:url,confidence:Math.round(Math.max(0,Math.min(1,conf))*100)/100,validation_notes:notes})}
+    return[out,warn]}
+
+  // ---- reasoning loop & completion (ports of agents/*) ----
+  const norm=v=>v&&typeof v==="object"?(v.amount_inr??v.status):v==null?null:String(v).trim().toLowerCase();
+  function compare(cur,old,fields){const C=Object.fromEntries(cur.map(r=>[r.entity_key,r])),O=Object.fromEntries(old.map(r=>[r.entity_key,r]));const out=[];
+    const ch=(r,type,cls,field,before,after,delta,conf)=>out.push({id:id("cmp"),entity_key:r.entity_key,entity:r.entity,change_type:type,classification:cls,field,before,after,delta_pct:delta,source_url:r.source_url,confidence:conf??r.confidence});
+    for(const[k,r] of Object.entries(C)){const p=O[k];if(!p){ch(r,"new","material",null,null,r.fields,null);continue}
+      for(const f of fields){const a=p.fields[f],b=r.fields[f],conf=Math.min(r.confidence,p.confidence);if(JSON.stringify(a)===JSON.stringify(b))continue;
+        if(b==null&&a!=null){ch(r,"field_missing","missing_data",f,a,null,null,conf);continue}
+        if(f==="price"&&a&&b){if(a.amount_inr===b.amount_inr){ch(r,"format_changed","formatting",f,a.raw,b.raw,0,conf);continue}
+          const d=(b.amount_inr-a.amount_inr)/a.amount_inr*100;ch(r,d>0?"price_up":"price_down",Math.abs(d)>=CFG.priceThr?"material":"noise",f,a.amount_inr,b.amount_inr,Math.round(d*100)/100,conf);continue}
+        if(f==="availability"&&a&&b){if(a.status!==b.status)ch(r,"availability","material",f,a.status,b.status,null,conf);else if(a.rooms_left!==b.rooms_left)ch(r,"availability","noise",f,a.rooms_left,b.rooms_left,null,conf);continue}
+        if(f==="search_index"&&typeof a==="number"&&a){const d=(b-a)/a*100;ch(r,d>0?"demand_up":"demand_down",Math.abs(d)>=CFG.trendThr?"material":"noise",f,a,b,Math.round(d*100)/100,conf);continue}
+        ch(r,norm(a)===norm(b)?"format_changed":"copy_changed",norm(a)===norm(b)?"formatting":"material",f,a,b,null,conf)}}
+    for(const[k,p] of Object.entries(O))if(!C[k])ch(p,"removed","material",null,p.fields,null,null);return out}
+  const money=v=>typeof v==="number"&&v>=100?"₹"+Math.round(v).toLocaleString("en-IN"):v&&typeof v==="object"?(v.offer_name||v.hotel||v.title||v.destination||"record"):String(v);
+  function describe(c){if(c.change_type==="new")return`New: ${c.entity}`;if(c.change_type==="removed")return`Withdrawn: ${c.entity}`;
+    if(c.change_type.startsWith("price_"))return`${c.entity}: price ${c.change_type==="price_up"?"up":"down"} ${Math.abs(c.delta_pct).toFixed(1)}% (${money(c.before)} to ${money(c.after)})`;
+    if(c.change_type.startsWith("demand_"))return`${c.entity}: demand index ${c.before} to ${c.after} (${c.delta_pct>0?"+":""}${Math.round(c.delta_pct)}%)`;
+    if(c.change_type==="availability")return`${c.entity}: availability ${c.before} to ${c.after}`;
+    if(c.change_type==="copy_changed")return`${c.entity}: ${c.field} changed from '${money(c.before)}' to '${money(c.after)}'`;return`${c.entity}: ${c.change_type.replace("_"," ")} (${c.field})`}
+  function why(tpl,m){const up=m.filter(c=>c.change_type==="price_up").length,dn=m.filter(c=>c.change_type==="price_down").length;
+    if(tpl==="hotel_pricing"){const p=[];if(dn)p.push(`${dn} hotel rate cut(s) may undercut our listed rates for the same stay date`);if(up)p.push(`${up} rate increase(s) open room to hold or raise our price`);if(m.some(c=>c.change_type==="availability"))p.push("inventory tightening signals demand pressure for these dates");return p.join("; ")}
+    return{competitor_offers:"Competitor offer movement affects our price perception on the same destinations; new or withdrawn offers change what customers compare us against.",campaign_page:"Landing page copy, CTA or placement changed; campaign messaging and tracking may need to follow.",partner_updates:"Partner policy or operational updates can affect listings, cancellation terms and customer promises.",travel_trends:"Demand signal movement can inform where to place campaign budget and inventory."}[tpl]}
+
+  // ---- data store helpers ----
+  const log=(run_id,kind,message,data={})=>db.events.push({id:++evId,run_id,kind,message,data,at:iso()});
+  const run=id=>db.runs.find(r=>r.id===id);
+  const setState=(r,s,extra={})=>{Object.assign(r,{state:s},extra);log(r.id,"state",`State -> ${s}`)};
+  function planFor(task){const S=SCHEMAS[task.template];const steps=[];let n=1;const risks=[];
+    for(const url of task.target_urls){if(!allowed(url))risks.push(`${url} is outside the domain allowlist and will be blocked`);
+      for(const[tool,args,purpose] of [["navigate",{},"Load the source page"],["dismiss_popups",{selectors:["#accept-cookies",".cookie-banner button"]},"Clear overlays that hide content"],["wait_for",{selectors:S.item,timeout_s:15},"Confirm content rendered"],["screenshot",{},"Evidence for reviewers"],["capture_html",{},"Snapshot for audit and re-extraction"],["extract",{schema:task.template},"Pull fields: "+Object.keys(S.fields).join(", ")]])
+        steps.push({order:n++,tool,target:url,args,purpose})}
+    for(const[tool,purpose] of [["compare","Detect movement vs prior snapshot"],["summarize","What changed, why it matters, evidence, owner"],["route",`Deliver to ${task.owner_team} dashboard and alert queue`]])steps.push({order:n++,tool,target:null,args:{},purpose});
+    if(task.template==="hotel_pricing")risks.push("Prices may differ by occupancy and date; comparison keyed on city + hotel + stay date");
+    if(task.template==="competitor_offers")risks.push("Promotional prices can be teaser prices; treat conclusions as needing confirmation before external action");
+    risks.push("Layout changes are detected through fallback selectors and lower confidence");
+    const p={id:id("plan"),task_id:task.id,steps,tools:[...new Set(steps.map(s=>s.tool))].sort(),extraction_schema:task.template,risks,
+      stop_conditions:["Stop a source after max retries or a policy violation; continue with remaining sources","Stop the run if the page cap or run budget is reached","Route to review if any record falls below minimum confidence"],
+      planner:"template",status:task.requires_approval?"draft":"approved",approved_by:task.requires_approval?null:"auto (non-sensitive)",created_at:iso()};db.plans.push(p);return p}
+  const allowed=u=>{try{const h=new URL(u).hostname;return CFG.allow.some(d=>h===d||h.endsWith("."+d))}catch{return false}};
+
+  async function execute(r){
+    const task=db.tasks.find(t=>t.id===r.task_id),plan=db.plans.find(p=>p.id===r.plan_id),S=SCHEMAS[plan.extraction_schema];
+    if(plan.status!=="approved"){setState(r,"awaiting_approval");log(r.id,"policy","Plan requires approval before browser execution");return}
+    await sleep(400);setState(r,"browser_execution",{started_at:iso()});log(r.id,"tool",`Executing approved plan ${plan.id} (${plan.steps.length} steps, planner=${plan.planner})`);
+    log(r.id,"browser","Browser engine ready: in-browser demo worker");
+    const caps={},fails={},pw={};
+    const browse=async urls=>{for(const url of urls){await sleep(450);
+      if(!allowed(url)){fails[url]={category:"policy_restriction"};log(r.id,"error",`Source failed: ${url} (policy_restriction: domain not on allowlist)`,{url,category:"policy_restriction"});continue}
+      let attempt=0,res;
+      while(attempt<=CFG.maxRetries){attempt++;r.pages_visited++;res=serve(url);if(res.status===200)break;
+        const cat=res.status===403?"browser_blocked":"source_unavailable";log(r.id,"warning",`${cat}: HTTP ${res.status} (attempt ${attempt})`,{url,category:cat});if(res.status===403||res.status===404)break;await sleep(300)}
+      if(res.status!==200){fails[url]={category:res.status===403?"browser_blocked":"source_unavailable"};log(r.id,"error",`Source failed: ${url} (${fails[url].category})`,{url,category:fails[url].category});continue}
+      r.retries+=attempt-1;log(r.id,"browser",`Loaded ${url} (HTTP 200, attempt ${attempt})`,{url});log(r.id,"browser","Dismissed pop-up via '#accept-cookies'",{url});
+      caps[url]=res.html;delete fails[url]}};
+    const extract=urls=>{db.records=db.records.filter(x=>!(x.run_id===r.id&&urls.includes(x.source_url)));
+      for(const url of urls){const html=caps[url];if(!html)continue;const snap={id:id("snap"),run_id:r.id,url,page_title:(html.match(/<title>(.*?)<\/title>/)||[])[1],http_status:200,content_hash:hash(html),html,captured_at:iso()};db.snapshots.push(snap);
+        const[recs,warn]=parse(html,url,task.template);pw[url]=warn;warn.forEach(w=>log(r.id,"warning",`Extraction: ${w}`,{url}));
+        recs.forEach(x=>db.records.push({...x,run_id:r.id,task_id:task.id,snapshot_id:snap.id,captured_at:iso()}));
+        log(r.id,"extract",`Extracted ${recs.length} record(s) from ${url}`,{url,count:recs.length})}};
+    const urls=[...new Set(plan.steps.filter(s=>s.target).map(s=>s.target))];
+    await browse(urls);
+    if(!Object.keys(caps).length){setState(r,"failed",{error:"All sources failed: "+Object.entries(fails).map(([u,f])=>`${u} (${f.category})`).join("; "),finished_at:iso()});return}
+    await sleep(400);setState(r,"extraction");extract(Object.keys(caps));
+    await sleep(400);setState(r,"comparison");
+    const prev=db.runs.filter(x=>x.task_id===task.id&&x.id!==r.id&&["completed","pending_review"].includes(x.state)).sort((a,b)=>b.created_at.localeCompare(a.created_at))[0];
+    const prior=prev?db.records.filter(x=>x.run_id===prev.id):[];
+    log(r.id,"tool",`Comparing against ${prev?"run "+prev.id:"no prior snapshot (baseline)"}`);
+    await sleep(400);setState(r,"reasoning");
+    let cur=db.records.filter(x=>x.run_id===r.id);
+    let changes=prev?compare(cur,prior,S.compare):[];const reasons=[];
+    const missing=[...new Set(prior.map(x=>x.source_url))].filter(u=>!cur.some(x=>x.source_url===u));
+    if(missing.length){log(r.id,"tool",`Reasoning loop: ${missing.length} source(s) returned nothing but had data last run; re-browsing once`);r.reran=true;
+      setState(r,"browser_execution");await browse(missing);setState(r,"extraction");extract(missing.filter(u=>caps[u]));setState(r,"reasoning");
+      cur=db.records.filter(x=>x.run_id===r.id);changes=compare(cur,prior,S.compare);
+      const still=missing.filter(u=>!cur.some(x=>x.source_url===u));if(still.length){changes.forEach(c=>{if(c.change_type==="removed"&&still.includes(c.source_url)){c.classification="missing_data";c.change_type="source_empty"}});reasons.push(`${still.length} source(s) returned no records after a rerun`)}}
+    const low=cur.filter(x=>x.confidence<CFG.minConf);if(low.length)reasons.push(`${low.length} record(s) below 70% extraction confidence`);
+    const lay=Object.values(pw).filter(w=>w.some(x=>/^(layout_changed|no_items)/.test(x))).length;if(lay)reasons.push(`Layout drift detected on ${lay} page(s); schema may need an update`);
+    const big=changes.filter(c=>c.field==="price"&&Math.abs(c.delta_pct||0)>=10).length;if(big)reasons.push(`${big} price move(s) of 10% or more; confirm before external action`);
+    if(Object.keys(fails).length)reasons.push(`${Object.keys(fails).length} source(s) failed: `+[...new Set(Object.values(fails).map(f=>f.category))].join(", "));
+    reasons.forEach(x=>log(r.id,"warning",`Review flag: ${x}`));
+    changes.forEach(c=>db.comparisons.push({...c,run_id:r.id}));
+    log(r.id,"tool",`${changes.length} change(s): `+["material","noise","formatting","missing_data"].map(k=>`${k}=${changes.filter(c=>c.classification===k).length}`).join(", "));
+    await sleep(400);setState(r,"completion");
+    const mat=changes.filter(c=>c.classification==="material"),owner=OWNERS[task.template],review=reasons.length>0;
+    const avg=cur.length?Math.round(cur.reduce((a,x)=>a+x.confidence,0)/cur.length*100)/100:0;
+    let headline,w;if(!prev){headline=`Baseline captured: ${cur.length} records from ${new Set(cur.map(x=>x.source_url)).size} source(s)`;w="First run for this workflow. Future runs will be compared against this snapshot."}
+    else if(!mat.length){headline=`No material change across ${cur.length} tracked records`;w="Movements detected were below thresholds or formatting-only."}
+    else{headline=`${mat.length} material change(s) detected`;w=why(task.template,mat)}
+    const actions=[];if(mat.length)actions.push(`${owner}: review ${mat.length} change(s) and decide on response`);if(review)actions.push("Reviewer: confirm flagged records before any external action");
+    mat.filter(c=>c.change_type==="price_down"&&c.delta_pct<=-10).forEach(c=>actions.push(`Pricing: check parity for ${c.entity}`));
+    const alerts=[];if(mat.length)alerts.push({channel:"dashboard",team:owner,message:headline});
+    if(mat.some(c=>Math.abs(c.delta_pct||0)>=10)||(task.template==="partner_updates"&&mat.length))alerts.push({channel:"alert_queue",team:owner,message:headline,priority:"high"});
+    if(review)alerts.push({channel:"review_queue",team:"Reviewers",message:reasons.join("; ")});
+    db.summaries.push({id:id("sum"),run_id:r.id,headline,generator:"template",alerts,created_at:iso(),body:{what_changed:mat.map(describe).length?mat.map(describe):["Nothing material"],why_it_matters:w,
+      evidence:mat.slice(0,25).map(c=>({statement:describe(c),source_url:c.source_url,confidence:c.confidence,classification:c.classification})),owner,confidence:avg,needs_human_confirmation:review,review_reasons:reasons,recommended_actions:actions,
+      counts:{records:cur.length,material:mat.length,noise:changes.filter(c=>c.classification==="noise").length,formatting:changes.filter(c=>c.classification==="formatting").length,missing_data:changes.filter(c=>c.classification==="missing_data").length}}});
+    alerts.forEach(a=>log(r.id,"tool",`Routed to ${a.channel} (${a.team})`,a));
+    await sleep(300);setState(r,review?"pending_review":"completed",{needs_review:review,finished_at:iso()});
+  }
+
+  function startRun(task_id,trigger="manual"){const task=db.tasks.find(t=>t.id===task_id);if(!task)throw{status:404,detail:"Task not found"};
+    const busy=db.runs.find(r=>r.task_id===task_id&&!TERMINAL.has(r.state)&&r.state!=="awaiting_approval");if(busy)throw{status:409,detail:`Run ${busy.id} is already in progress for this workflow`};
+    let plan=db.plans.filter(p=>p.task_id===task_id).at(-1);if(!plan||plan.status==="rejected")plan=planFor(task);
+    const r={id:id("run"),task_id,plan_id:plan.id,state:"task_intake",trigger,trace_id:id("t").slice(2),pages_visited:0,retries:0,cost_usd:0,error:null,needs_review:false,started_at:null,finished_at:null,created_at:iso()};
+    db.runs.push(r);log(r.id,"state","State -> task_intake");setTimeout(()=>{r.state="plan_generated";log(r.id,"state",`State -> plan_generated (${plan.planner} planner, ${plan.status})`);execute(r).catch(e=>setState(r,"failed",{error:String(e)}))},350);return r.id}
+
+  const PERM={creator:["task:write","plan:write","run:write"],reviewer:["plan:approve","feedback:write"],admin:["task:write","plan:write","plan:approve","run:write","feedback:write"]};
+  const need=(role,p)=>{if(!PERM[role].includes(p))throw{status:403,detail:`Role '${role}' lacks permission '${p}'`}};
+
+  function seed(){[
+    ["Competitor holiday offers","competitor_offers","Track competitor holiday package offers, prices and discounts across priority destinations and flag launches, withdrawals and price moves.",["offers/tripnova","offers/skyroam"],"daily","Growth",false],
+    ["Hotel pricing watch: Goa, Jaipur, Dubai","hotel_pricing","Watch nightly rates and room availability for tracked hotels for a stay 14 days out and flag significant movement or sell-outs.",["hotels/goa","hotels/jaipur","hotels/dubai"],"hourly","Pricing & Revenue",true],
+    ["Campaign landing pages","campaign_page","Verify headline, offer copy, CTA and placement on active campaign landing pages and note any change.",["campaign/summer-sale","campaign/diwali-getaways"],"campaign","Marketing Ops",false],
+    ["Partner update feed","partner_updates","Follow partner hotel update feed and route new policy, pricing or operational notices to the owning team.",["partners"],"daily","Partner Ops",false],
+    ["Destination demand signals","travel_trends","Scan destination demand index and event signals to spot rising or falling interest for growth planning.",["trends"],"weekly","Business Strategy",false],
+  ].forEach(([name,template,objective,paths,schedule,owner_team,requires_approval])=>db.tasks.push({id:id("task"),name,template,objective,target_urls:paths.map(p=>`${BASE}/${p}`),expected_fields:Object.keys(SCHEMAS[template].fields),schedule,completion_rules:{},owner_team,requires_approval,active:true,created_at:iso()}))}
+  seed();
+
+  const withLast=t=>{const rs=db.runs.filter(r=>r.task_id===t.id);return{...t,last_run:rs.at(-1)||null,run_count:rs.length}};
+  async function api(method,path,body,role){
+    const m=path.match.bind(path);let x;
+    if(path==="/api/health")return{ok:true,llm:false,browser_engine:"demo",allowlist:CFG.allow,demo:true};
+    if(path==="/mock/state")return{tick:db.tick};
+    if(path==="/mock/advance"){db.tick++;return{tick:db.tick}}
+    if(path==="/api/workflows")return Object.entries(SCHEMAS).map(([k,v])=>({name:k,label:TEMPLATE_LABEL[k]||k,kind:"monitor",schema:k,fields:Object.keys(v.fields),default_urls:[],inputs:[],description:"Demo mode: runs against the bundled sample pages in this browser."}));
+    if(path==="/api/tools")return{navigate:"",dismiss_popups:"",wait_for:"",extract:"",compare:"",summarize:"",route:""};
+    if((x=m(/^\/api\/runs\/(\w+)\/live/))){const r=run(x[1]);const snaps=db.snapshots.filter(s=>s.run_id===r.id);const plan=db.plans.find(p=>p.id===r.plan_id);const done=TERMINAL.has(r.state);const since=+(new URLSearchParams(path.split("?")[1]).get("since")||0);
+      const nav=snaps.length;let k=0;const steps=plan.steps.map(st=>{let status="pending";if(done)status="done";else if(st.target){const idx=[...new Set(plan.steps.filter(z=>z.target).map(z=>z.target))].indexOf(st.target);status=idx<nav?"done":idx===nav&&r.state==="browser_execution"?"running":"pending"}return{...st,status}});
+      return{state:r.state,seq:snaps.length,live:!done,steps,caption:done?(db.summaries.find(s=>s.run_id===r.id)||{}).headline:`${STATE_LABEL[r.state]||r.state}…`,url:snaps.at(-1)?.url,control:null,
+        frames:snaps.map((s,i)=>({seq:i+1,caption:`Captured ${s.page_title}`,url:s.url,html:s.html})).filter(f=>f.seq>since)}}
+    if(path==="/api/live")return db.runs.slice().reverse().filter(r=>!TERMINAL.has(r.state)||Date.now()-new Date(r.finished_at||0)<600000).map(r=>({run_id:r.id,task_name:db.tasks.find(t=>t.id===r.task_id).name,state:r.state,seq:db.snapshots.filter(s=>s.run_id===r.id).length,caption:STATE_LABEL[r.state],url:db.snapshots.filter(s=>s.run_id===r.id).at(-1)?.url,control:null}));
+    if(m(/\/api\/runs\/\w+\/(control|input)/))throw{status:409,detail:"Browser controls need the local backend with Chromium."};
+    if(path==="/api/tasks"&&method==="GET")return db.tasks.map(withLast);
+    if(path==="/api/tasks"&&method==="POST"){need(role,"task:write");const probs=[];if(!SCHEMAS[body.template])probs.push("Choose a workflow type");
+      const bad=body.target_urls.filter(u=>!allowed(u));if(bad.length)probs.push(`Not on the domain allowlist: ${bad.join(", ")}`);if((body.objective||"").length<10)probs.push("Describe the objective in at least 10 characters");if(!body.target_urls.length)probs.push("Add at least one source URL");
+      if(probs.length)throw{status:422,detail:{message:"Task needs more detail before planning",problems:probs}};const t={id:id("task"),...body,active:true,created_at:iso()};if(!t.expected_fields?.length)t.expected_fields=Object.keys(SCHEMAS[t.template].fields);db.tasks.push(t);return t}
+    if((x=m(/^\/api\/tasks\/([\w]+)$/))&&method==="PATCH"){need(role,"task:write");const t=db.tasks.find(t=>t.id===x[1]);Object.assign(t,body);return t}
+    if(path==="/api/plans"&&method==="POST"){need(role,"plan:write");return planFor(db.tasks.find(t=>t.id===body.task_id))}
+    if((x=m(/^\/api\/plans\/(\w+)\/approve$/))){need(role,"plan:approve");const p=db.plans.find(p=>p.id===x[1]);p.status=body.approve?"approved":"rejected";p.approved_by=role;
+      const waiting=db.runs.filter(r=>r.plan_id===p.id&&r.state==="awaiting_approval");waiting.forEach(r=>{log(r.id,"policy",`Plan ${p.status} by ${role}`);if(body.approve){r.state="plan_generated";execute(r)}else setState(r,"failed",{error:"Plan rejected by reviewer",finished_at:iso()})});return{status:p.status,resumed_runs:waiting.map(r=>r.id)}}
+    if(path==="/api/runs"&&method==="POST"){need(role,"run:write");return{run_id:startRun(body.task_id)}}
+    if(path.startsWith("/api/runs?")||path==="/api/runs"){const tid=new URLSearchParams(path.split("?")[1]).get("task_id");return db.runs.filter(r=>!tid||r.task_id===tid).slice().reverse().map(r=>({...r,task_name:db.tasks.find(t=>t.id===r.task_id).name,headline:db.summaries.find(s=>s.run_id===r.id)?.headline}))}
+    if((x=m(/^\/api\/runs\/(\w+)$/))){const r=run(x[1]);if(!r)throw{status:404,detail:"Run not found"};
+      return{...r,task:db.tasks.find(t=>t.id===r.task_id),plan:db.plans.find(p=>p.id===r.plan_id),events:db.events.filter(e=>e.run_id===r.id),snapshots:db.snapshots.filter(s=>s.run_id===r.id).map(({html,...s})=>s),
+        records:db.records.filter(x=>x.run_id===r.id),comparisons:db.comparisons.filter(x=>x.run_id===r.id),summary:db.summaries.find(s=>s.run_id===r.id)||null,feedback:db.feedback.filter(f=>f.run_id===r.id)}}
+    if((x=m(/^\/api\/snapshots\/(\w+)\/html$/)))return db.snapshots.find(s=>s.id===x[1]).html;
+    if(path==="/api/feedback"){need(role,"feedback:write");const f={id:id("fb"),...body,reviewer:role,created_at:iso()};db.feedback.push(f);const r=run(body.run_id);log(r.id,"review",`Reviewer ${body.verdict} ${body.target_type} ${body.target_id}`);
+      if(body.target_type==="summary"&&body.verdict==="accepted"&&r.state==="pending_review"){r.state="completed";log(r.id,"state","State -> completed (review signed off)")}return f}
+    if(path==="/api/metrics"){const done=db.runs.filter(r=>TERMINAL.has(r.state)),ok=done.filter(r=>r.state!=="failed"),fb=db.feedback.filter(f=>f.target_type==="record");const fr={};
+      db.events.filter(e=>e.kind==="error").forEach(e=>{const c=e.data.category||"other";fr[c]=(fr[c]||0)+1});
+      const src={};db.snapshots.forEach(s=>{(src[s.url]??={url:s.url,captures:0}).captures++});
+      db.events.filter(e=>e.kind==="error"&&e.data.url).forEach(e=>{const o=src[e.data.url]??={url:e.data.url,captures:0};o.failures=(o.failures||0)+1});
+      db.events.filter(e=>e.kind==="warning"&&e.message.startsWith("Extraction: layout")).forEach(e=>{const o=src[e.data.url]??={url:e.data.url,captures:0};o.layout_warnings=(o.layout_warnings||0)+1});
+      return{runs_total:db.runs.length,runs_finished:done.length,completion_rate:done.length?ok.length/done.length:null,pending_review:db.runs.filter(r=>r.state==="pending_review").length,failed:db.runs.filter(r=>r.state==="failed").length,
+        retries:db.runs.reduce((a,r)=>a+r.retries,0),avg_confidence:db.records.length?db.records.reduce((a,r)=>a+r.confidence,0)/db.records.length:null,low_confidence_records:db.records.filter(r=>r.confidence<CFG.minConf).length,
+        reviewer_acceptance:fb.length?fb.filter(f=>f.verdict==="accepted").length/fb.length:null,material_changes:db.comparisons.filter(c=>c.classification==="material").length,cost_usd:0,failure_reasons:fr,
+        source_health:Object.values(src).sort((a,b)=>((b.failures||0)+(b.layout_warnings||0))-((a.failures||0)+(a.layout_warnings||0)))}}
+    throw{status:404,detail:`No demo route for ${method} ${path}`}}
+  return {api,BASE,allow:CFG.allow};
+})();
+
+/* =====================================================================
+   API client: live backend if reachable, otherwise the demo engine
+   ===================================================================== */
+const App={live:false,role:"admin",poll:null,view:"dashboard",param:null,tab:"summary"};
+async function api(method,path,body){
+  if(!App.live){try{return await Demo.api(method,path,body,App.role)}catch(e){throw e}}
+  const res=await fetch(path,{method,headers:{"content-type":"application/json","x-role":App.role},body:body?JSON.stringify(body):undefined});
+  const ct=res.headers.get("content-type")||"";const data=ct.includes("json")?await res.json():await res.text();
+  if(!res.ok)throw{status:res.status,detail:data.detail??data};return data}
+const GET=p=>api("GET",p),POST=(p,b)=>api("POST",p,b||{}),PATCH=(p,b)=>api("PATCH",p,b);
+function errText(e){const d=e.detail;if(d&&d.problems)return d.message+": "+d.problems.join("; ");return typeof d==="string"?d:(e.message||JSON.stringify(d))}
+
+/* =====================================================================
+   Rendering helpers
+   ===================================================================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ago=t=>{if(!t)return"";const s=(Date.now()-new Date(t))/1000;return s<60?`${Math.max(1,Math.round(s))}s ago`:s<3600?`${Math.round(s/60)}m ago`:s<86400?`${Math.round(s/3600)}h ago`:new Date(t).toLocaleDateString()};
+const clock=t=>new Date(t).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+function chip(state){const cls=state==="awaiting_input"?"review":state==="stopped"?"failed":TERMINAL.has(state)||state==="awaiting_approval"?state:"running";return`<span class="chip ${cls}">${state==="plan_generated"||state==="task_intake"?"Queued":esc(STATE_LABEL[state]||state)}</span>`}
+function conf(v){const c=v>=.85?"var(--green)":v>=.7?"var(--amber)":"var(--red)";return`<span class="conf"><i style="--w:${Math.round(v*100)}%;--c:${c}"></i><span class="num" style="font-size:14px">${Math.round(v*100)}%</span></span>`}
+function fval(v){if(v==null)return'<span class="muted">missing</span>';if(typeof v==="object"){if("amount_inr"in v)return`<span class="num">₹${Math.round(v.amount_inr).toLocaleString("en-IN")}</span><div class="small muted">${esc(v.raw)}</div>`;if("status"in v)return esc(v.status.replace("_"," "))+(v.rooms_left!=null?` <span class="muted">(${v.rooms_left})</span>`:"");return esc(JSON.stringify(v))}return esc(v)}
+function cval(v){if(v==null)return'<span class="muted">none</span>';if(typeof v==="number")return`<span class="num">${v>=100?"₹"+Math.round(v).toLocaleString("en-IN"):v}</span>`;if(typeof v==="object")return esc(v.offer_name||v.hotel||v.title||v.headline||v.destination||"record");return esc(v)}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("on"),2600)}
+function shortUrl(u){try{const x=new URL(u);return x.pathname}catch{return u}}
+
+function go(view,param=null,tab){App.view=view;App.param=param;if(tab)App.tab=tab;stopPolling();
+  document.querySelectorAll(".rail button[data-view]").forEach(b=>b.setAttribute("aria-current",b.dataset.view===view||(view==="run"&&b.dataset.view==="runs")||(view==="plan"&&b.dataset.view==="tasks")?"page":"false"));
+  $("#rail").classList.remove("open");render();window.scrollTo(0,0)}
+async function render(){const m=$("#main");try{m.innerHTML=menuBtn()+await VIEWS[App.view](App.param);bind(m)}catch(e){m.innerHTML=menuBtn()+`<div class="flag bad">${esc(errText(e))}</div>`}refreshBadge();
+  if(App.view==="run"&&App.cur&&!Poller.timer){if(App.tab==="live")loadLive(App.cur.id,true);if(!TERMINAL.has(App.cur.state)&&App.cur.state!=="awaiting_approval")startRunPolling(App.cur.id)}
+  if(App.view==="wall"&&!Poller.timer)startWallPolling()}
+const menuBtn=()=>`<button class="btn small menu" data-act="menu" aria-controls="rail">Menu</button>`;
+async function refreshBadge(){try{const rs=await GET("/api/runs");const n=rs.filter(r=>["pending_review","awaiting_approval","awaiting_input"].includes(r.state)).length;const b=$("#reviewCount");b.hidden=!n;b.textContent=n;
+  const a=rs.filter(r=>!TERMINAL.has(r.state)&&r.state!=="awaiting_approval").length;const l=$("#liveCount");l.hidden=!a;l.textContent=a}catch{}}
+
+/* =====================================================================
+   Polling: exactly one poller at a time, stops itself, never re-renders
+   unless something actually changed, pauses while the tab is hidden.
+   ===================================================================== */
+const Poller={timer:null,token:0};
+function stopPolling(){Poller.token++;clearTimeout(Poller.timer);Poller.timer=null}
+function sig(r){return [r.state,App.tab==="live"?"":r.events.length,r.records.length,r.comparisons.length,r.feedback.length,!!r.summary,r.error].join("|")}
+function startRunPolling(runId){
+  stopPolling();const my=++Poller.token;
+  const tick=async()=>{
+    if(my!==Poller.token)return;
+    if(document.hidden){Poller.timer=setTimeout(tick,2000);return}
+    let r;try{r=await GET(`/api/runs/${runId}`)}catch{Poller.timer=setTimeout(tick,3000);return}
+    if(my!==Poller.token||App.view!=="run"||App.param!==runId)return;
+    const done=TERMINAL.has(r.state)||r.state==="awaiting_approval";
+    if(App.tab==="live")await loadLive(runId);
+    if(my!==Poller.token)return;
+    if(sig(r)!==sig(App.cur)){
+      App.cur=r;
+      if(App.tab==="live"){patchRunHeader(r)}else{await paintRun()}}
+    if(done){if(App.tab==="live")await loadLive(runId);stopPolling();refreshBadge();if(App.tab==="live")await paintRun();return}
+    Poller.timer=setTimeout(tick,App.tab==="live"?700:1000)};
+  Poller.timer=setTimeout(tick,500)}
+function patchRunHeader(r){const h=$("#runHead");if(h)h.outerHTML=runHead(r);
+  const lbl={summary:"Summary",changes:`Changes (${r.comparisons.filter(c=>c.classification==="material").length})`,records:`Records (${r.records.length})`,log:`Activity log (${r.events.length})`,evidence:`Snapshots (${r.snapshots.length})`};
+  document.querySelectorAll("[data-tab]").forEach(b=>{if(lbl[b.dataset.tab])b.textContent=lbl[b.dataset.tab]});const rs=$("#routeWrap");if(rs)rs.innerHTML=routeStrip(r);const st=$("#runStats");if(st)st.outerHTML=runStats(r);bind($("#main").querySelector("#runHead")||document.createElement("div"))}
+function startWallPolling(){
+  stopPolling();const my=++Poller.token;
+  const tick=async()=>{
+    if(my!==Poller.token||App.view!=="wall")return;
+    if(!document.hidden){let rows;try{rows=await GET("/api/live")}catch{rows=null}
+      if(my!==Poller.token||App.view!=="wall")return;
+      if(rows)patchWall(rows)}
+    Poller.timer=setTimeout(tick,1500)};
+  Poller.timer=setTimeout(tick,1200)}
+function startDashboardPolling(){
+  stopPolling();const my=++Poller.token;
+  const tick=async()=>{
+    if(my!==Poller.token||App.view!=="dashboard")return;
+    let rs;try{rs=await GET("/api/runs")}catch{rs=[]}
+    if(my!==Poller.token||App.view!=="dashboard")return;
+    await render();
+    if(rs.every(r=>TERMINAL.has(r.state)||r.state==="awaiting_approval"))return stopPolling();
+    Poller.timer=setTimeout(tick,1500)};
+  Poller.timer=setTimeout(tick,1500)}
+async function paintRun(){const main=$("#main"),y=window.scrollY,logEl=$("#log");
+  const atBottom=!logEl||logEl.scrollTop+logEl.clientHeight>=logEl.scrollHeight-10;
+  main.innerHTML=menuBtn()+await VIEWS.run(App.cur.id,App.cur);bind(main);window.scrollTo(0,y);
+  if(App.tab==="live"){if(App.liveRun===App.cur.id&&App.lv)updateLive();loadLive(App.cur.id)}
+  const l2=$("#log");if(l2&&atBottom)l2.scrollTop=l2.scrollHeight}
+
+/* =====================================================================
+   Live browser view
+   ===================================================================== */
+App.frames=[];App.follow=true;App.liveRun=null;App.lv=null;
+async function loadLive(runId,reset){
+  if(reset||App.liveRun!==runId){App.frames=[];App.follow=true;App.liveRun=runId}
+  const since=App.frames.length?App.frames.at(-1).seq:0;
+  let lv;try{lv=await GET(`/api/runs/${runId}/live?since=${since}`)}catch{return}
+  if(App.liveRun!==runId)return;
+  for(const f of lv.frames||[])if(!App.frames.length||f.seq>App.frames.at(-1).seq)App.frames.push(f);
+  App.lv=lv;updateLive()}
+function frameSrc(f){return f.html!=null?null:`/api/runs/${App.liveRun}/frames/${f.seq}.jpg`}
+function showFrame(i){const f=App.frames[i];const v=$("#lvView");if(!f||!v)return;
+  if(f.html!=null){let fr=v.querySelector("iframe");if(!fr){v.innerHTML='<iframe sandbox="" title="Captured page"></iframe>';fr=v.querySelector("iframe")}if(fr.dataset.seq!=String(f.seq)){fr.srcdoc=f.html;fr.dataset.seq=f.seq}}
+  else{let img=v.querySelector("img");if(!img){v.innerHTML='<img alt="Browser frame">';img=v.querySelector("img")}
+    const src=frameSrc(f);if(img.getAttribute("src")!==src){const pre=new Image();pre.onload=()=>{img.src=src};pre.src=src}}
+  $("#lvUrl").textContent=f.url||"";$("#lvCap").textContent=f.caption||"";
+  const sl=$("#lvSlider");if(sl){sl.max=App.frames.length-1;sl.value=i;$("#lvCount").textContent=`Frame ${i+1} of ${App.frames.length}`}}
+function updateLive(){const lv=App.lv;if(!lv||!$("#lvView"))return;
+  if(App.frames.length){if(App.follow)showFrame(App.frames.length-1)}
+  else{$("#lvView").innerHTML=`<div class="placeholder">${lv.live===false&&!TERMINAL.has(lv.state)?"Waiting for the browser to start…":App.live?"No browser frames for this run. Runs using the HTTP engine don't produce frames; install Chromium with: python -m playwright install chromium":"Starting…"}</div>`;
+    $("#lvCap").textContent=lv.caption||"";$("#lvUrl").textContent=lv.url||""}
+  if(!App.follow&&lv.caption)$("#lvCap").textContent=lv.caption;
+  const ol=$("#lvSteps");if(ol&&lv.steps&&lv.steps.length){
+    if(ol.children.length!==lv.steps.length)ol.innerHTML=lv.steps.map((st,i)=>`<li data-i="${i}" data-st="${st.status}"><span class="ic"></span><span><span class="tl">${esc(st.tool.replace(/_/g," "))}</span> ${esc(st.purpose)}</span></li>`).join("");
+    else lv.steps.forEach((st,i)=>{const li=ol.children[i];if(li.dataset.st!==st.status){li.dataset.st=st.status;if(st.status==="running")li.scrollIntoView({block:"nearest"})}})}
+  const c=lv.control, running=!!c;
+  const ctl=$("#lvCtl");if(ctl){
+    ctl.innerHTML=running?`${c.paused?`<button class="btn primary small" data-ctl="resume">Resume</button>`:`<button class="btn small" data-ctl="pause">Pause</button>`}
+      <button class="btn small" data-ctl="step">Step one action</button><button class="btn warn small" data-ctl="stop">Stop run</button>`
+      :`<span class="small muted">${TERMINAL.has(lv.state)?"Run finished. Scrub the frames to replay it.":lv.state==="awaiting_approval"?"Waiting for plan approval.":"Controls appear once the browser starts."}</span>`;
+    $("#lvStatus").textContent=running?(c.stopping?"Stopping…":c.awaiting_input?"Waiting for your decision":c.paused?"Paused":"Running"):"";
+    bind(ctl)}
+  const ap=$("#lvApproval");if(ap){const need=running&&c.awaiting_input;
+    if(need&&ap.hidden){ap.hidden=false;ap.innerHTML=`<b>The agent needs your approval</b><p>${esc(c.awaiting_input.message)}</p><input id="lvNote" placeholder="Note (optional)"><div class="row"><button class="btn primary" data-input="approve">Approve and continue</button><button class="btn warn" data-input="decline">Don't approve</button></div>`;bind(ap)}
+    else if(!need&&!ap.hidden){ap.hidden=true;ap.innerHTML=""}}}
+
+/* =====================================================================
+   Views
+   ===================================================================== */
+const VIEWS={};
+function wfOf(t){return (App.workflows||[]).find(w=>w.name===t)}
+function kindTag(t){const w=wfOf(t);return w&&w.kind==="transaction"?'<span class="kind transaction">Transaction</span>':'<span class="kind">Monitor</span>'}
+VIEWS.wall=async()=>{const rows=await GET("/api/live");
+  return`<div class="head"><div><h1>Live browsers</h1><p class="sub">Every workflow running now, with the agent's latest browser frame. Open one to watch it step by step, pause it, or approve a booking.</p></div>
+  <div class="row"><button class="btn primary" data-act="runall">Run all monitoring workflows</button></div></div>
+  <div class="wall" id="wall">${wallCards(rows)}</div>`};
+function wallCards(rows){if(!rows.length)return`<div class="panel empty" style="grid-column:1/-1">No browsers running. Start a workflow from <a href="#" data-go="tasks">Workflows</a>; runs from the last 10 minutes also appear here.</div>`;
+  return rows.map(w=>`<div class="card" data-run="${w.run_id}" data-seq="${w.seq}"><div class="thumb">${w.seq&&App.live?`<img alt="" src="/api/runs/${w.run_id}/frames/${w.seq}.jpg">`:`<span>${TERMINAL.has(w.state)?"Finished":!App.live?"Frames need the local backend":["task_intake","plan_generated"].includes(w.state)?"Queued":"Starting browser…"}</span>`}</div>
+   <div class="meta"><div class="row" style="justify-content:space-between"><b>${esc(w.task_name)}</b>${chip(w.state)}</div><div class="cap">${esc(w.caption||"")}</div>
+   <div class="url">${esc(w.url||"")}</div>${w.control&&w.control.awaiting_input?`<div class="flag" style="margin:8px 0 0">Needs your approval</div>`:""}</div></div>`).join("")}
+function patchWall(rows){const wall=$("#wall");if(!wall)return;const cards=[...wall.querySelectorAll(".card")];
+  if(cards.length!==rows.length||cards.some((c,i)=>c.dataset.run!==rows[i].run_id)){wall.innerHTML=wallCards(rows);bind(wall);return}
+  rows.forEach((w,i)=>{const c=cards[i];if(c.dataset.seq!=String(w.seq)&&App.live&&w.seq){c.dataset.seq=w.seq;const th=c.querySelector(".thumb");let img=th.querySelector("img");if(!img){th.innerHTML='<img alt="">';img=th.querySelector("img")}const pre=new Image();pre.onload=()=>img.src=pre.src;pre.src=`/api/runs/${w.run_id}/frames/${w.seq}.jpg`}
+    c.querySelector(".cap").textContent=w.caption||"";c.querySelector(".url").textContent=w.url||"";const ch=c.querySelector(".chip");if(ch)ch.outerHTML=chip(w.state)})}
+VIEWS.dashboard=async()=>{
+  const [m,runs,st]=await Promise.all([GET("/api/metrics"),GET("/api/runs"),GET("/mock/state").catch(()=>null)]);
+  const pct=v=>v==null?"n/a":Math.round(v*100)+"%";
+  const fr=Object.entries(m.failure_reasons||{});
+  return`<div class="head"><div><h1>Operations overview</h1><p class="sub">Every workflow run, what it found, and where it needs a person. Figures cover all runs recorded so far.</p></div>
+  <div class="row"><button class="btn" data-go="wall">Watch live browsers</button><button class="btn primary" data-act="runall">Run all monitoring workflows</button></div></div>
+  <div class="stats">
+    <div class="stat"><b>${pct(m.completion_rate)}</b><span>Runs finished without failure</span></div>
+    <div class="stat"><b>${m.pending_review}</b><span>Waiting for a reviewer</span></div>
+    <div class="stat"><b>${m.material_changes}</b><span>Material changes found</span></div>
+    <div class="stat"><b>${pct(m.avg_confidence)}</b><span>Average extraction confidence</span></div>
+    <div class="stat"><b>${m.low_confidence_records}</b><span>Low-confidence records</span></div>
+    <div class="stat"><b>$${(m.cost_usd||0).toFixed(3)}</b><span>Model spend</span></div>
+  </div>
+  ${st?`<div class="panel market" style="margin-bottom:16px"><div><h3 style="margin:0">Demo sources are on market day ${st.tick}</h3><span class="muted small">Moving the market shifts prices, offers and copy on the bundled sources, so the next run has something to detect. Day 2 also redesigns the Goa hotel page to show layout-drift handling.</span></div><button class="btn" data-act="advance">Move market forward a day</button></div>`:""}
+  <div class="grid g2">
+    <div class="panel"><h2>Recent runs</h2>${runs.length?`<div class="wrap"><table><thead><tr><th>Workflow</th><th>State</th><th>Result</th><th>Started</th></tr></thead><tbody>
+      ${runs.slice(0,8).map(r=>`<tr class="click" data-run="${r.id}"><td>${esc(r.task_name)}</td><td>${chip(r.state)}</td><td class="small">${esc(r.headline||r.error||"")}</td><td class="small muted">${ago(r.created_at)}</td></tr>`).join("")}</tbody></table></div>`
+      :`<div class="empty">No runs yet. Use <b>Run all workflows</b> to capture a baseline, move the market forward, then run again to see change detection.</div>`}</div>
+    <div class="panel"><h2>Source health</h2>${m.source_health.length?`<div class="wrap"><table><thead><tr><th>Source</th><th>Captures</th><th>Failures</th><th>Layout drift</th></tr></thead><tbody>
+      ${m.source_health.map(s=>`<tr><td class="url">${esc(shortUrl(s.url))}</td><td class="num">${s.captures}</td><td class="num" style="color:${s.failures?"var(--red)":"inherit"}">${s.failures||0}</td><td class="num" style="color:${s.layout_warnings?"var(--amber)":"inherit"}">${s.layout_warnings||0}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Source health appears after the first run.</div>`}
+      ${fr.length?`<h3 style="margin-top:16px">Failure reasons</h3>${fr.map(([k,v])=>`<span class="chip failed" style="margin:0 6px 6px 0">${esc(k.replace(/_/g," "))}: ${v}</span>`).join("")}`:""}
+      ${m.reviewer_acceptance!=null?`<p class="small muted" style="margin-top:12px">Reviewers accepted ${pct(m.reviewer_acceptance)} of records they checked.</p>`:""}</div>
+  </div>`};
+
+VIEWS.tasks=async()=>{const ts=await GET("/api/tasks");
+  return`<div class="head"><div><h1>Workflows</h1><p class="sub">Monitors read sites on a schedule and compare with the last run. Transactions (like bookings) click through a site and always stop for your approval before the final step.</p></div><button class="btn primary" data-go="new">New workflow</button></div>
+  <div class="panel wrap"><table><thead><tr><th>Workflow</th><th>Type</th><th>Schedule</th><th>Owner</th><th>Last run</th><th></th></tr></thead><tbody>
+  ${ts.map(t=>{const tx=(wfOf(t.template)||{}).kind==="transaction";return`<tr><td><b>${esc(t.name)}</b><div class="small muted">${esc(Object.entries(t.inputs||{}).filter(([k])=>k!=="steps").slice(0,4).map(([k,v])=>`${k.replace(/_/g," ")}: ${v||"auto"}`).join(" · ")||t.target_urls.map(shortUrl).join(", "))}</div>${t.requires_approval?`<div class="small muted">Plan approval required</div>`:""}</td>
+    <td>${esc(TEMPLATE_LABEL[t.template]||t.template)}<br>${kindTag(t.template)}</td>
+    <td>${tx?'<span class="small muted">On demand only</span>':`<select data-sched="${t.id}" aria-label="Schedule for ${esc(t.name)}">${["once","hourly","daily","weekly","campaign","every_5_min"].map(s=>`<option ${s===t.schedule?"selected":""}>${s}</option>`).join("")}</select>`}</td>
+    <td>${esc(t.owner_team)}</td><td>${t.last_run?`<a href="#" data-run="${t.last_run.id}">${chip(t.last_run.state)}</a> <span class="small muted">${ago(t.last_run.created_at)}</span>`:'<span class="muted small">Never run</span>'}</td>
+    <td class="row" style="flex-wrap:nowrap"><button class="btn small" data-plan="${t.id}">Review plan</button><button class="btn small primary" data-start="${t.id}" data-name="${esc(t.name)}">${tx?"Start":"Run now"}</button></td></tr>`}).join("")}
+  </tbody></table></div>`};
+
+const CUSTOM_EXAMPLE=JSON.stringify([
+ {"tool":"navigate","target":"URL_BASE/travel/hotels?city=jaipur","purpose":"Open hotel results"},
+ {"tool":"dismiss_popups","args":{"selectors":["#accept-cookies"]},"purpose":"Accept cookies"},
+ {"tool":"select","args":{"selector":"#sort","value":"rating"},"purpose":"Sort by rating"},
+ {"tool":"extract","args":{"schema":"hotel_listings"},"purpose":"Read the listings"}],null,1);
+VIEWS.new=async()=>{const base=App.live?`${location.origin}/mock`:Demo.BASE;const wfs=App.workflows||[];
+  return`<div class="head"><div><h1>New workflow</h1><p class="sub">Pick what the agent should do. You can review its browser plan before anything runs. Sites must be on the domain allowlist${App.live?"":" (in this demo: demo-sources.mmt.internal)"}.</p></div></div>
+  <form class="intake panel" id="intake">
+    <div id="formErr"></div>
+    <label>Workflow type<select name="template">${["monitor","transaction"].map(k=>`<optgroup label="${k==="monitor"?"Monitor and extract":"Transaction (needs your approval)"}">${wfs.filter(w=>w.kind===k).map(w=>`<option value="${w.name}">${esc(w.label)}</option>`).join("")}</optgroup>`).join("")}</select><span class="hint" id="wfDesc"></span></label>
+    <label>Name<input type="text" name="name" required minlength="3" placeholder="Pune to Goa, cheapest non-stop"></label>
+    <div id="wfInputs" class="pair"></div>
+    <label id="urlsWrap">Start URLs<span class="hint">One per line. Leave the default to use the bundled demo travel site${App.live?", or point at any allowlisted site":""}.</span><textarea name="urls"></textarea></label>
+    <label id="stepsWrap" hidden>Steps (JSON)<span class="hint">Tools: ${esc(Object.keys(App.tools||{}).join(", "))}. Placeholders like {{city}} come from inputs.</span><textarea name="steps" style="min-height:220px;font:13px ui-monospace,Consolas,monospace">${esc(CUSTOM_EXAMPLE.replace("URL_BASE",base))}</textarea></label>
+    <label>Objective<span class="hint">What should the agent achieve, and what counts as worth reporting?</span><textarea name="objective" required minlength="10"></textarea></label>
+    <div class="pair"><label>Schedule<select name="schedule">${["once","hourly","daily","weekly","campaign"].map(s=>`<option>${s}</option>`).join("")}</select></label>
+    <label>Owning team<select name="owner_team">${["Growth","Pricing & Revenue","Marketing Ops","Partner Ops","Business Strategy","Travel Desk"].map(o=>`<option>${o}</option>`).join("")}</select></label></div>
+    <label class="check"><input type="checkbox" name="requires_approval"> Require plan approval before the browser runs</label>
+    <div class="row"><button class="btn primary" type="submit">Create workflow and review plan</button><button class="btn" type="button" data-go="tasks">Cancel</button></div>
+  </form>`};
+
+VIEWS.plan=async(taskId)=>{const task=(await GET("/api/tasks")).find(t=>t.id===taskId);const plan=await POST("/api/plans",{task_id:taskId});
+  return`<div class="head"><div><h1>Plan for ${esc(task.name)}</h1><p class="sub">${esc(task.objective)}</p></div>
+  <div class="row">${chip(plan.status==="approved"?"completed":"awaiting_approval").replace(/>.*</,`>${plan.status==="approved"?"Approved":"Draft, needs approval"}<`)}<button class="btn primary" data-start="${task.id}" data-name="${esc(task.name)}">Run with this plan</button></div></div>
+  <div class="grid gplan">
+  <div class="panel"><h2>Browser steps</h2><ol class="steps">${plan.steps.map(s=>`<li><span class="tool">${esc(s.tool.replace("_"," "))}</span><span>${esc(s.purpose)}${s.target?`<div class="url">${esc(s.target)}</div>`:""}</span></li>`).join("")}</ol></div>
+  <div class="grid" style="align-content:start"><div class="panel"><h3>Risks the planner flagged</h3><ul class="small" style="padding-left:18px;margin:0">${plan.risks.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>
+  <div class="panel"><h3>Stop conditions</h3><ul class="small" style="padding-left:18px;margin:0">${plan.stop_conditions.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>
+  <div class="panel small"><h3>Extraction schema</h3>${esc(plan.extraction_schema||"none")}: ${((wfOf(task.template)||{}).fields||[]).map(esc).join(", ")||"no structured extraction"}<p class="muted" style="margin-bottom:0">Generated by the ${esc(plan.planner)} planner. Tools limited to: ${plan.tools.map(esc).join(", ")}.</p></div></div></div>`};
+
+VIEWS.runs=async()=>{const rs=await GET("/api/runs");
+  return`<div class="head"><div><h1>Run history</h1><p class="sub">Every run keeps its plan, browser log, snapshots, records and summary for audit and reruns.</p></div></div>
+  <div class="panel wrap">${rs.length?`<table><thead><tr><th>Run</th><th>Workflow</th><th>State</th><th>Trigger</th><th>Pages</th><th>Result</th><th>Started</th></tr></thead><tbody>
+  ${rs.map(r=>`<tr class="click" data-run="${r.id}"><td class="small">${esc(r.id)}</td><td>${esc(r.task_name)}</td><td>${chip(r.state)}</td><td class="small">${esc(r.trigger)}</td><td class="num">${r.pages_visited}</td><td class="small">${esc(r.headline||r.error||"")}</td><td class="small muted">${ago(r.created_at)}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">No runs yet. Start one from Workflows.</div>`}</div>`};
+
+VIEWS.review=async()=>{const rs=(await GET("/api/runs")).filter(r=>["pending_review","awaiting_approval","awaiting_input"].includes(r.state));
+  return`<div class="head"><div><h1>Review queue</h1><p class="sub">Runs wait here when a plan needs approval, extraction confidence is low, a page layout drifted, a source failed, or prices moved 10% or more. Nothing leaves for external action until a reviewer signs off.</p></div></div>
+  <div class="panel wrap">${rs.length?`<table><thead><tr><th>Workflow</th><th>Waiting for</th><th>Detail</th><th>Since</th></tr></thead><tbody>
+  ${rs.map(r=>`<tr class="click" data-run="${r.id}"><td>${esc(r.task_name)}</td><td>${chip(r.state)}</td><td class="small">${esc(r.headline||(r.state==="awaiting_input"?"The agent is paused in the browser waiting for your decision":"Plan approval"))}</td><td class="small muted">${ago(r.created_at)}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">Nothing is waiting for review.</div>`}</div>`};
+
+function routeStrip(r){
+  const needsApproval=r.plan&&(r.plan.approved_by!=="auto (non-sensitive)"||r.state==="awaiting_approval");
+  const usedInput=r.state==="awaiting_input"||r.events.some(e=>e.message==="State -> awaiting_input");
+  const stops=STATES.filter(s=>(s!=="awaiting_approval"||needsApproval)&&(s!=="awaiting_input"||usedInput));
+  const seen=new Set(r.events.filter(e=>e.kind==="state").map(e=>e.message.replace("State -> ","").split(" ")[0]));
+  const idx=stops.indexOf(r.state);const term=TERMINAL.has(r.state);
+  const rerun=r.events.some(e=>e.message.startsWith("Reasoning loop:"));
+  const items=stops.map((s,i)=>{let cls="";
+    if(term&&r.state!=="failed")cls="done";
+    else if(r.state==="failed"||r.state==="stopped"){cls=seen.has(s)?"done":"";}
+    else if(i<idx)cls="done";else if(i===idx)cls=s==="awaiting_approval"||s==="awaiting_input"?"halt":"now";
+    const time=r.events.find(e=>e.kind==="state"&&e.message.startsWith("State -> "+s));
+    return`<li class="${cls}">${STATE_LABEL[s]}${time?`<small>${clock(time.at)}</small>`:""}</li>`});
+  const endCls=r.state==="failed"||r.state==="stopped"?"fail":r.state==="pending_review"?"halt":r.state==="completed"?"done":"";
+  items.push(`<li class="${endCls}">${term?STATE_LABEL[r.state]:"Finish"}${r.finished_at?`<small>${clock(r.finished_at)}</small>`:""}</li>`);
+  if(r.state==="failed"||r.state==="stopped"){const last=[...stops].reverse().find(s=>seen.has(s));const i=stops.indexOf(last);items[i]=items[i].replace('class="done"','class="fail"')}
+  return`<div class="route" aria-label="Run progress"><ol>${items.join("")}</ol>${rerun?`<div class="loopnote">↺ The reasoning agent sent the run back to the browser once because a source returned nothing that had data last time.</div>`:""}</div>`}
+
+function runHead(r){return`<div class="head" id="runHead"><div><h1>${esc(r.task.name)}</h1><p class="sub" style="margin-bottom:0">Run ${esc(r.id)} · ${esc(r.trigger)}${r.options&&r.options.speed?` · ${esc(r.options.speed)} speed`:""}${r.options&&r.options.headed?" · visible window":""}</p></div>
+  <div class="row">${chip(r.state)}${App.live&&r.summary?`<a class="btn small" href="/api/runs/${r.id}/export.csv">Download CSV</a>`:""}<button class="btn small" data-start="${r.task_id}" ${TERMINAL.has(r.state)?"":"disabled"}>Run again</button></div></div>`}
+function runStats(r){return`<div class="stats" id="runStats"><div class="stat"><b>${r.pages_visited}</b><span>Pages visited</span></div><div class="stat"><b>${r.records.length}</b><span>Records extracted</span></div><div class="stat"><b>${r.comparisons.filter(c=>c.classification==="material").length}</b><span>Material changes</span></div><div class="stat"><b>${r.outcome&&r.outcome.booking_ref?esc(r.outcome.booking_ref):r.retries}</b><span>${r.outcome&&r.outcome.booking_ref?"Booking reference":"Retries"}</span></div><div class="stat"><b>$${(r.cost_usd||0).toFixed(3)}</b><span>Model spend</span></div></div>`}
+VIEWS.run=async(id,pre)=>{const r=pre||await GET(`/api/runs/${id}`);App.cur=r;if(App.tab==="auto"||!TABS[App.tab])App.tab=TERMINAL.has(r.state)?"summary":"live";
+  const tabs=[["live",`Live browser`],["summary","Summary"],["changes",`Changes (${r.comparisons.filter(c=>c.classification==="material").length})`],["records",`Records (${r.records.length})`],["plan","Plan"],["log",`Activity log (${r.events.length})`],["evidence",`Snapshots (${r.snapshots.length})`]];
+  return`${runHead(r)}
+  <div id="routeWrap">${routeStrip(r)}</div>
+  ${runStats(r)}
+  ${r.state==="awaiting_approval"?`<div class="flag"><b>This plan needs approval before the browser runs.</b> Review the steps in the Plan tab. <div class="row" style="margin-top:8px"><button class="btn primary small" data-approve="${r.plan_id}">Approve plan and run</button><button class="btn warn small" data-reject="${r.plan_id}">Reject plan</button></div></div>`:""}
+  ${r.error?`<div class="flag bad"><b>Run failed.</b> ${esc(r.error)}. Check the activity log, fix the source or schema, then run again.</div>`:""}
+  <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${App.tab===k}" data-tab="${k}">${l}</button>`).join("")}</div>
+  <div id="tabBody">${TABS[App.tab](r)}</div>`};
+
+const TABS={};
+TABS.live=r=>`<div class="livegrid"><div>
+  <div class="browser"><div class="bar"><span class="dots"><i></i><i></i><i></i></span><div class="urlbar" id="lvUrl"></div></div>
+  <div class="viewport" id="lvView"><div class="placeholder">Connecting to the browser…</div></div></div>
+  <div class="livecap" id="lvCap" aria-live="polite"></div>
+  <div class="replay"><input type="range" id="lvSlider" min="0" max="0" value="0" aria-label="Replay frames"><span id="lvCount"></span><button class="btn small" data-live="latest">Latest</button></div></div>
+  <div><div class="approval" id="lvApproval" hidden></div>
+  <div class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">Controls</h3><span class="small muted" id="lvStatus"></span></div><div class="ctlbar" id="lvCtl"></div></div>
+  <div class="panel"><h3>Steps</h3><ol class="stepl" id="lvSteps">${(r.plan?.steps||[]).map((s,i)=>`<li data-i="${i}" data-st="${TERMINAL.has(r.state)?"done":"pending"}"><span class="ic"></span><span><span class="tl">${esc(s.tool.replace(/_/g," "))}</span> ${esc(s.purpose)}</span></li>`).join("")}</ol></div></div></div>`;
+TABS.summary=r=>{const s=r.summary;if(!s)return`<div class="panel empty">${TERMINAL.has(r.state)?"This run ended before a summary was produced.":"The summary appears when the run completes."}</div>`;const b=s.body;
+  const fbDone=r.feedback.some(f=>f.target_type==="summary");
+  const o=r.outcome||{};const outcome=b.kind==="transaction"?(o.booking_ref?`<div class="outcome"><div class="small">Booking reference</div><div class="ref">${esc(o.booking_ref)}</div><div>${o.chosen_hotel?`${esc(o.chosen_hotel)} · ${esc(o.chosen_room||"")} · ${esc(o.nights||"")} nights for ${esc(o.guest_name||"")}`:`${esc(o.origin||"")} to ${esc(o.destination||"")} on ${esc(o.date||"")} for ${esc(o.traveller_name||"")}`} · total <b>${esc(o.total||"")}</b></div><div class="small muted">${o.chosen_hotel?"Cheapest matching hotel and room":`Chosen: ${esc(o.chosen_option||"")} (cheapest of ${esc(o.options_compared||"?")})`}</div></div>`
+    :`<div class="outcome no"><b>Not booked.</b> ${esc(o.declined||"The run ended before confirming.")}</div>`):"";
+  return`<div class="panel summary"><p class="headline">${esc(s.headline)}</p>${outcome}
+  ${b.needs_human_confirmation?`<div class="flag"><b>Confirm before external action.</b><ul style="margin:6px 0 0">${b.review_reasons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:`<div class="flag ok">No review flags on this run.</div>`}
+  <div class="grid g2"><div><h3>What changed</h3><ul>${b.what_changed.slice(0,12).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>${b.what_changed.length>12?`<p class="small muted">${b.what_changed.length-12} more in the Changes tab.</p>`:""}
+  <h3>Why it matters</h3><p style="margin-top:0">${esc(b.why_it_matters)}</p></div>
+  <div><h3>Owner</h3><p style="margin-top:0">${esc(b.owner)}</p><h3>Recommended actions</h3><ul>${(b.recommended_actions.length?b.recommended_actions:["No action needed"]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+  <h3>Delivered to</h3><p style="margin-top:0">${s.alerts.length?s.alerts.map(a=>`<span class="chip ${a.channel==="review_queue"?"review":a.priority==="high"?"material":""}" style="margin:0 6px 6px 0">${esc(a.channel.replace("_"," "))}: ${esc(a.team)}</span>`).join(""):"Dashboard only"}</p>
+  <h3>Record mix</h3><p class="small" style="margin-top:0">${b.counts.records} records · ${b.counts.material} material · ${b.counts.noise} noise · ${b.counts.formatting} formatting-only · ${b.counts.missing_data} missing data · average confidence ${Math.round(b.confidence*100)}%</p></div></div>
+  ${b.evidence.length?`<h3>Evidence</h3><div class="wrap"><table><tbody>${b.evidence.slice(0,10).map(e=>`<tr><td>${esc(e.statement)}</td><td class="url">${esc(shortUrl(e.source_url))}</td><td>${conf(e.confidence)}</td></tr>`).join("")}</tbody></table></div>`:""}
+  <div class="row" style="margin-top:16px">${fbDone?`<span class="muted small">Reviewer decision recorded: ${esc(r.feedback.filter(f=>f.target_type==="summary").at(-1).verdict)}.</span>`:
+   `<button class="btn primary" data-fb="summary:${s.id}:accepted">Accept summary</button><button class="btn warn" data-fb="summary:${s.id}:rejected">Reject summary</button>`}
+   <span class="small muted">Generated by the ${esc(s.generator)} writer from extracted records.</span></div></div>`};
+TABS.changes=r=>{if(!r.comparisons.length)return`<div class="panel empty">${r.summary?.headline?.startsWith("Baseline")?"This run is the baseline. Move the market forward and run again to see changes.":"No changes compared with the previous run."}</div>`;
+  const order={material:0,missing_data:1,noise:2,formatting:3};const cs=[...r.comparisons].sort((a,b)=>order[a.classification]-order[b.classification]);
+  return`<div class="panel wrap"><table><thead><tr><th>Entity</th><th>Change</th><th>Field</th><th>Before</th><th>After</th><th>Move</th><th>Class</th><th>Confidence</th></tr></thead><tbody>
+  ${cs.map(c=>`<tr><td>${esc(c.entity)}<div class="url">${esc(shortUrl(c.source_url))}</div></td><td>${esc(c.change_type.replace(/_/g," "))}</td><td>${esc(c.field||"")}</td><td>${cval(c.before)}</td><td>${cval(c.after)}</td>
+   <td class="num" style="color:${c.delta_pct>0?"var(--red)":c.delta_pct<0?"var(--green)":"inherit"}">${c.delta_pct!=null?(c.delta_pct>0?"+":"")+c.delta_pct.toFixed(1)+"%":""}</td><td><span class="chip ${c.classification==="material"?"material":c.classification==="missing_data"?"review":""}">${esc(c.classification.replace("_"," "))}</span></td><td>${conf(c.confidence)}</td></tr>`).join("")}</tbody></table>
+  <p class="small muted">Price moves under the threshold count as noise. Same value in a different format (₹ 7,499 vs INR 7499) counts as formatting-only.</p></div>`};
+TABS.records=r=>{if(!r.records.length)return`<div class="panel empty">No records yet.</div>`;const fields=Object.keys(r.records[0].fields);const fb=Object.fromEntries(r.feedback.filter(f=>f.target_type==="record").map(f=>[f.target_id,f.verdict]));
+  return`<div class="panel wrap"><table><thead><tr>${fields.map(f=>`<th>${esc(f.replace("_"," "))}</th>`).join("")}<th>Confidence</th><th>Validation notes</th><th>Reviewer</th></tr></thead><tbody>
+  ${r.records.map(x=>`<tr>${fields.map(f=>`<td>${fval(x.fields[f])}</td>`).join("")}<td>${conf(x.confidence)}</td><td class="small">${x.validation_notes.length?x.validation_notes.map(esc).join("<br>"):'<span class="muted">none</span>'}</td>
+  <td>${fb[x.id]?`<span class="chip ${fb[x.id]==="accepted"?"completed":"failed"}">${fb[x.id]}</span>`:`<div class="row" style="flex-wrap:nowrap"><button class="btn small" data-fb="record:${x.id}:accepted" aria-label="Accept record">Accept</button><button class="btn small warn" data-fb="record:${x.id}:rejected" aria-label="Reject record">Reject</button></div>`}</td></tr>`).join("")}</tbody></table></div>`};
+TABS.plan=r=>{const p=r.plan;return`<div class="grid gplan"><div class="panel"><h2>Planned steps</h2><ol class="steps">${p.steps.map(s=>`<li><span class="tool">${esc(s.tool.replace("_"," "))}</span><span>${esc(s.purpose)}${s.target?`<div class="url">${esc(s.target)}</div>`:""}</span></li>`).join("")}</ol></div>
+  <div class="panel"><h3>Risks</h3><ul class="small" style="padding-left:18px">${p.risks.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><h3>Approval</h3><p class="small">${esc(p.status)}${p.approved_by?` by ${esc(p.approved_by)}`:""}</p></div></div>`};
+TABS.log=r=>`<div class="panel"><div class="log" id="log">${r.events.map(e=>`<div class="k-${e.kind}"><span>${clock(e.at)}</span><span>${esc(e.kind)}</span><span>${esc(e.message)}</span></div>`).join("")}</div></div>`;
+TABS.evidence=r=>r.snapshots.length?`<div class="panel wrap"><table><thead><tr><th>Page</th><th>Title</th><th>Status</th><th>Content hash</th><th></th></tr></thead><tbody>${r.snapshots.map(s=>`<tr><td class="url">${esc(s.url)}</td><td>${esc(s.page_title)}</td><td class="num">${s.http_status}</td><td class="small">${esc(s.content_hash.slice(0,12))}</td>
+  <td class="row" style="flex-wrap:nowrap"><button class="btn small" data-snap="${s.id}">View HTML</button>${App.live&&s.has_screenshot?`<a class="btn small" target="_blank" href="/api/snapshots/${s.id}/screenshot">Screenshot</a>`:""}</td></tr>`).join("")}</tbody></table><pre id="snapView" class="log" hidden style="white-space:pre-wrap;margin-top:12px"></pre></div>`:`<div class="panel empty">No pages captured.</div>`;
+
+/* =====================================================================
+   Events
+   ===================================================================== */
+function bind(root){
+  root.querySelectorAll("[data-go]").forEach(b=>b.onclick=e=>{e.preventDefault();go(b.dataset.go)});
+  root.querySelectorAll("[data-run]").forEach(b=>b.onclick=e=>{e.preventDefault();go("run",b.dataset.run,"auto")});
+  root.querySelectorAll("[data-plan]").forEach(b=>b.onclick=()=>go("plan",b.dataset.plan));
+  root.querySelectorAll("[data-start]").forEach(b=>b.onclick=()=>openRunDialog(b.dataset.start,b.dataset.name||""));
+  root.querySelectorAll("[data-ctl]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await POST(`/api/runs/${App.cur.id}/control`,{action:b.dataset.ctl});toast({pause:"Paused",resume:"Resumed",step:"Running one action",stop:"Stopping"}[b.dataset.ctl]);await loadLive(App.cur.id)}catch(e){toast(errText(e));b.disabled=false}});
+  root.querySelectorAll("[data-input]").forEach(b=>b.onclick=async()=>{const ok=b.dataset.input==="approve";root.querySelectorAll("[data-input]").forEach(x=>x.disabled=true);
+    try{await POST(`/api/runs/${App.cur.id}/input`,{approve:ok,note:($("#lvNote")||{}).value||null});toast(ok?"Approved. The agent is continuing.":"Not approved. The agent will stop before confirming.");await loadLive(App.cur.id)}catch(e){toast(errText(e))}});
+  root.querySelectorAll("[data-live]").forEach(b=>b.onclick=()=>{App.follow=true;showFrame(App.frames.length-1)});
+  const sl=root.querySelector("#lvSlider");if(sl)sl.oninput=()=>{App.follow=+sl.value===App.frames.length-1;showFrame(+sl.value)};
+  root.querySelectorAll("[data-sched]").forEach(s=>s.onchange=async()=>{try{await PATCH(`/api/tasks/${s.dataset.sched}`,{schedule:s.value});toast(`Schedule set to ${s.value}`)}catch(e){toast(errText(e))}});
+  root.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{App.tab=b.dataset.tab;root.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===b));$("#tabBody").innerHTML=TABS[App.tab](App.cur);bind($("#tabBody"));if(App.tab==="live")loadLive(App.cur.id,true)});
+  root.querySelectorAll("[data-approve],[data-reject]").forEach(b=>b.onclick=async()=>{try{await POST(`/api/plans/${b.dataset.approve||b.dataset.reject}/approve`,{approve:!!b.dataset.approve});toast(b.dataset.approve?"Plan approved":"Plan rejected");stopPolling();await render()}catch(e){toast(errText(e))}});
+  root.querySelectorAll("[data-fb]").forEach(b=>b.onclick=async()=>{const[t,id,v]=b.dataset.fb.split(":");b.disabled=true;try{await POST("/api/feedback",{run_id:App.cur.id,target_type:t,target_id:id,verdict:v});toast(`${t==="summary"?"Summary":"Record"} ${v}`);App.cur=await GET(`/api/runs/${App.cur.id}`);await paintRun()}catch(e){b.disabled=false;toast(errText(e))}});
+  root.querySelectorAll("[data-snap]").forEach(b=>b.onclick=async()=>{const pre=$("#snapView");pre.hidden=false;pre.textContent=await GET(`/api/snapshots/${b.dataset.snap}/html`)});
+  root.querySelectorAll("[data-act]").forEach(b=>b.onclick=async()=>{const a=b.dataset.act;
+    if(a==="menu"){$("#rail").classList.toggle("open");return}
+    if(a==="advance"){const s=await POST("/mock/advance");toast(`Market moved to day ${s.tick}`);render()}
+    if(a==="runall"){const ts=await GET("/api/tasks");let n=0;for(const t of ts){if((wfOf(t.template)||{}).kind==="transaction")continue;try{await POST("/api/runs",{task_id:t.id,options:savedOpts()});n++}catch{}}toast(`Started ${n} run(s)`);await render();if(App.view==="dashboard")startDashboardPolling()}});
+  const form=root.querySelector("#intake");if(form){const sel=form.template;
+    const upd=()=>{const w=wfOf(sel.value)||{};$("#wfDesc").textContent=w.description||"";
+      $("#wfInputs").innerHTML=(w.inputs||[]).map(i=>`<label>${esc(i.label)}<input type="text" name="in_${i.name}" value="${esc(i.default||"")}" placeholder="${i.name==="date"?"Leave empty for two weeks from today":""}"></label>`).join("");
+      const custom=sel.value==="custom";$("#stepsWrap").hidden=!custom;$("#urlsWrap").hidden=custom;form.urls.value=(w.default_urls||[]).join("\n");
+      form.schedule.disabled=w.kind==="transaction";if(w.kind==="transaction")form.schedule.value="once";
+      if(!form.objective.dataset.touched)form.objective.value=w.description||"";if(!form.name.dataset.touched)form.name.value=w.label||""};
+    form.objective.oninput=()=>form.objective.dataset.touched=1;form.name.oninput=()=>form.name.dataset.touched=1;sel.onchange=upd;upd();
+    form.onsubmit=async e=>{e.preventDefault();const f=new FormData(form);const w=wfOf(f.get("template"))||{};const inputs={};
+      for(const i of w.inputs||[])inputs[i.name]=f.get("in_"+i.name)||"";
+      if(f.get("template")==="custom"){try{inputs.steps=JSON.parse(f.get("steps"))}catch(err){$("#formErr").innerHTML=`<div class="flag bad">Steps are not valid JSON: ${esc(err.message)}</div>`;return}
+        const ex=inputs.steps.find(x=>x.tool==="extract"&&x.args&&x.args.schema);if(ex)inputs.schema=ex.args.schema}
+      const body={name:f.get("name"),template:f.get("template"),objective:f.get("objective"),target_urls:(f.get("urls")||"").split(/\n+/).map(s=>s.trim()).filter(Boolean),
+        schedule:w.kind==="transaction"?"once":(f.get("schedule")||"once"),owner_team:f.get("owner_team"),requires_approval:!!f.get("requires_approval"),inputs};
+      try{const t=await POST("/api/tasks",body);toast("Workflow created");go("plan",t.id)}catch(err){$("#formErr").innerHTML=`<div class="flag bad">${esc(errText(err))}</div>`;window.scrollTo(0,0)}}}
+  const l=$("#log");if(l)l.scrollTop=l.scrollHeight;
+}
+function savedOpts(){try{return JSON.parse(localStorage.getItem("runOpts"))||{speed:"normal",headed:false,step_mode:false}}catch{return{speed:"normal",headed:false,step_mode:false}}}
+function openRunDialog(taskId,name){
+  if(!App.live){POST("/api/runs",{task_id:taskId}).then(({run_id})=>{toast("Run started");go("run",run_id,"live")}).catch(e=>toast(errText(e)));return}
+  const d=$("#runDlg"),o=savedOpts();$("#runDlgName").textContent=name;$("#optSpeed").value=o.speed||"normal";$("#optHeaded").checked=!!o.headed;$("#optStep").checked=!!o.step_mode;
+  d.onclose=async()=>{if(d.returnValue!=="go")return;const opts={speed:$("#optSpeed").value,headed:$("#optHeaded").checked,step_mode:$("#optStep").checked};
+    try{localStorage.setItem("runOpts",JSON.stringify({...opts,step_mode:false}))}catch{}
+    try{const{run_id}=await POST("/api/runs",{task_id:taskId,options:opts});toast(opts.headed?"Run started. A Chrome window is opening on this computer.":"Run started");go("run",run_id,"live")}catch(e){toast(errText(e))}};
+  d.returnValue="";d.showModal()}
+document.querySelectorAll(".rail button[data-view]").forEach(b=>b.onclick=()=>go(b.dataset.view));
+$("#role").onchange=e=>{App.role=e.target.value;toast(`Acting as ${e.target.selectedOptions[0].text.toLowerCase()}`);render()};
+$("#theme").onchange=e=>{try{e.target.value?document.documentElement.setAttribute("data-theme",e.target.value):document.documentElement.removeAttribute("data-theme");localStorage.setItem("theme",e.target.value)}catch{}};
+try{const t=localStorage.getItem("theme");if(t){document.documentElement.setAttribute("data-theme",t);$("#theme").value=t}}catch{}
+
+(async()=>{
+  try{const c=new AbortController();setTimeout(()=>c.abort(),1500);const r=await fetch("/api/health",{signal:c.signal});const h=r.ok&&(r.headers.get("content-type")||"").includes("json")?await r.json():null;App.live=!!(h&&h.ok&&!h.demo);App.health=h}catch{App.live=false}
+  $("#modeNote").innerHTML=App.live?`Connected to backend. Browser: ${App.health.playwright?"Chromium":"HTTP only (install Chromium for live view)"}. Model: ${App.health.llm?"on":"off"}.`:"Demo mode: the full pipeline runs in this page against bundled sample sources.";
+  if(App.live)$("#sitesLink").hidden=false;
+  try{App.workflows=await GET("/api/workflows");App.tools=await GET("/api/tools")}catch{App.workflows=[]}
+  go("dashboard");
+})();
+</script>
+</body>
+</html>

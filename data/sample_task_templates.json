@@ -1,0 +1,285 @@
+[
+  {
+    "name": "Competitor holiday offers",
+    "template": "competitor_offers",
+    "objective": "Track competitor holiday package offers, prices and discounts across priority destinations and flag launches, withdrawals and price moves.",
+    "target_urls": [
+      "{BASE}/mock/offers/tripnova",
+      "{BASE}/mock/offers/skyroam"
+    ],
+    "expected_fields": [
+      "competitor",
+      "offer_name",
+      "destination",
+      "price",
+      "discount",
+      "validity",
+      "cta"
+    ],
+    "schedule": "daily",
+    "completion_rules": {
+      "alert_on": "material",
+      "price_threshold_pct": 3
+    },
+    "owner_team": "Growth",
+    "requires_approval": false,
+    "inputs": {}
+  },
+  {
+    "name": "Hotel pricing watch: Goa, Jaipur, Dubai",
+    "template": "hotel_pricing",
+    "objective": "Watch nightly rates and room availability for tracked hotels for a stay 14 days out and flag significant movement or sell-outs.",
+    "target_urls": [
+      "{BASE}/mock/hotels/goa",
+      "{BASE}/mock/hotels/jaipur",
+      "{BASE}/mock/hotels/dubai"
+    ],
+    "expected_fields": [
+      "hotel",
+      "city",
+      "stay_date",
+      "price",
+      "availability"
+    ],
+    "schedule": "hourly",
+    "completion_rules": {
+      "alert_on": "material",
+      "review_on_price_move_pct": 10
+    },
+    "owner_team": "Pricing & Revenue",
+    "requires_approval": true,
+    "inputs": {}
+  },
+  {
+    "name": "Campaign landing pages",
+    "template": "campaign_page",
+    "objective": "Verify headline, offer copy, CTA and placement on active campaign landing pages and note any change.",
+    "target_urls": [
+      "{BASE}/mock/campaign/summer-sale",
+      "{BASE}/mock/campaign/diwali-getaways"
+    ],
+    "expected_fields": [
+      "campaign",
+      "headline",
+      "offer_text",
+      "cta",
+      "placement",
+      "validity"
+    ],
+    "schedule": "campaign",
+    "completion_rules": {
+      "alert_on": "any_copy_change"
+    },
+    "owner_team": "Marketing Ops",
+    "requires_approval": false,
+    "inputs": {}
+  },
+  {
+    "name": "Partner update feed",
+    "template": "partner_updates",
+    "objective": "Follow partner hotel update feed and route new policy, pricing or operational notices to the owning team.",
+    "target_urls": [
+      "{BASE}/mock/partners"
+    ],
+    "expected_fields": [
+      "partner",
+      "title",
+      "published",
+      "content",
+      "category"
+    ],
+    "schedule": "daily",
+    "completion_rules": {
+      "alert_on": "new"
+    },
+    "owner_team": "Partner Ops",
+    "requires_approval": false,
+    "inputs": {}
+  },
+  {
+    "name": "Destination demand signals",
+    "template": "travel_trends",
+    "objective": "Scan destination demand index and event signals to spot rising or falling interest for growth planning.",
+    "target_urls": [
+      "{BASE}/mock/trends"
+    ],
+    "expected_fields": [
+      "destination",
+      "search_index",
+      "event",
+      "trend"
+    ],
+    "schedule": "weekly",
+    "completion_rules": {
+      "alert_on": "material",
+      "demand_threshold_pct": 15
+    },
+    "owner_team": "Business Strategy",
+    "requires_approval": false,
+    "inputs": {}
+  },
+  {
+    "name": "Book a flight: Pune to Goa",
+    "template": "flight_booking",
+    "objective": "Search Pune to Goa flights two weeks out, pick the cheapest non-stop option, fill traveller details and book after approval.",
+    "target_urls": [
+      "{BASE}/mock/travel"
+    ],
+    "expected_fields": [],
+    "schedule": "once",
+    "completion_rules": {},
+    "owner_team": "Travel Desk",
+    "requires_approval": false,
+    "inputs": {
+      "origin": "Pune",
+      "destination": "Goa",
+      "date": "",
+      "passengers": "1",
+      "traveller_name": "Test Traveller",
+      "traveller_email": "ops-test@example.com",
+      "nonstop": "yes"
+    }
+  },
+  {
+    "name": "Fare watch: Mumbai to Delhi",
+    "template": "flight_fares",
+    "objective": "Record every fare on the Mumbai to Delhi route and flag fare moves above 3%.",
+    "target_urls": [
+      "{BASE}/mock/travel"
+    ],
+    "expected_fields": [],
+    "schedule": "daily",
+    "completion_rules": {},
+    "owner_team": "Pricing & Revenue",
+    "requires_approval": false,
+    "inputs": {
+      "origin": "Mumbai",
+      "destination": "Delhi",
+      "date": "",
+      "nonstop": "no"
+    }
+  },
+  {
+    "name": "Goa hotel search: free cancellation, cheapest first",
+    "template": "hotel_listings",
+    "objective": "Search Goa hotels, filter to free cancellation, sort by price and read three pages of results.",
+    "target_urls": [
+      "{BASE}/mock/travel/hotels?city={{city}}"
+    ],
+    "expected_fields": [],
+    "schedule": "daily",
+    "completion_rules": {},
+    "owner_team": "Pricing & Revenue",
+    "requires_approval": false,
+    "inputs": {
+      "city": "goa",
+      "max_pages": "3",
+      "free_cancellation": "yes"
+    }
+  },
+  {
+    "name": "Real site: books.toscrape.com travel category",
+    "template": "book_listings",
+    "objective": "Open the Travel category on the public practice site and read listings with prices and stock.",
+    "target_urls": [
+      "https://books.toscrape.com/"
+    ],
+    "expected_fields": [],
+    "schedule": "once",
+    "completion_rules": {},
+    "owner_team": "Growth",
+    "requires_approval": false,
+    "inputs": {
+      "category": "Travel",
+      "max_pages": "2"
+    }
+  },
+  {
+    "name": "Book a hotel in Goa (free cancellation)",
+    "template": "hotel_booking",
+    "objective": "Find the cheapest free-cancellation hotel and room in Goa for 2 nights, fill guest details and book after approval.",
+    "target_urls": [
+      "{BASE}/mock/travel/hotels?city={{city}}&nights={{nights}}"
+    ],
+    "schedule": "once",
+    "owner_team": "Travel Desk",
+    "inputs": {
+      "city": "goa",
+      "nights": "2",
+      "guest_name": "Test Guest",
+      "guest_email": "ops-test@example.com",
+      "free_cancellation": "yes"
+    },
+    "expected_fields": [],
+    "completion_rules": {},
+    "requires_approval": false
+  },
+  {
+    "name": "Train seats: Pune to Delhi (3A)",
+    "template": "train_availability",
+    "objective": "Track 3A seat availability and fares on Pune to Delhi trains two weeks out.",
+    "target_urls": [
+      "{BASE}/mock/rail"
+    ],
+    "schedule": "daily",
+    "owner_team": "Rail Desk",
+    "inputs": {
+      "origin": "Pune",
+      "destination": "Delhi",
+      "date": "",
+      "travel_class": "3A"
+    },
+    "expected_fields": [],
+    "completion_rules": {},
+    "requires_approval": false
+  },
+  {
+    "name": "Goa water sports: cheapest first",
+    "template": "activity_listings",
+    "objective": "Read Goa water-sports activities sorted by price and flag price or cancellation changes.",
+    "target_urls": [
+      "{BASE}/mock/activities/{{city}}"
+    ],
+    "schedule": "daily",
+    "owner_team": "Experiences",
+    "inputs": {
+      "city": "goa",
+      "category": "water",
+      "max_pages": "2"
+    },
+    "expected_fields": [],
+    "completion_rules": {},
+    "requires_approval": false
+  },
+  {
+    "name": "Reviews watch: Sea Breeze Resort",
+    "template": "review_watch",
+    "objective": "Watch new guest reviews for Sea Breeze Resort and flag negative ones for partner follow-up.",
+    "target_urls": [
+      "{BASE}/mock/reviews/{{hotel}}"
+    ],
+    "schedule": "daily",
+    "owner_team": "Partner Ops",
+    "inputs": {
+      "hotel": "sea-breeze-resort",
+      "max_pages": "2"
+    },
+    "expected_fields": [],
+    "completion_rules": {},
+    "requires_approval": false
+  },
+  {
+    "name": "Travel advisories for destinations we sell",
+    "template": "advisory_watch",
+    "objective": "Track advisory levels and visa rules for international destinations in our catalogue.",
+    "target_urls": [
+      "{BASE}/mock/advisories"
+    ],
+    "schedule": "daily",
+    "owner_team": "Trust & Safety",
+    "inputs": {},
+    "expected_fields": [],
+    "completion_rules": {},
+    "requires_approval": false
+  }
+]

@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    environment: {POSTGRES_USER: webops, POSTGRES_PASSWORD: webops, POSTGRES_DB: webops}
+    volumes: [pgdata:/var/lib/postgresql/data]
+  api:
+    build: {context: ., dockerfile: deployment/docker/Dockerfile}
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://webops:webops@db:5432/webops
+      PUBLIC_BASE_URL: http://localhost:8000
+      SNAPSHOT_DIR: /data/snapshots
+    ports: ["8000:8000"]
+    volumes: [snapshots:/data/snapshots]
+    depends_on: [db]
+volumes: {pgdata: {}, snapshots: {}}

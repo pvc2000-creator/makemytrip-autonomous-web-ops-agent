@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: mmt-web-ops-agent
+    runtime: docker
+    dockerfilePath: deployment/docker/Dockerfile
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: webops-db, property: connectionString}
+      - key: PUBLIC_BASE_URL
+        sync: false          # set to the Render URL, e.g. https://mmt-web-ops-agent.onrender.com
+      - key: DOMAIN_ALLOWLIST
+        sync: false          # include the Render hostname so the worker may browse the bundled sources
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SNAPSHOT_DIR
+        value: /var/data/snapshots
+    disk: {name: snapshots, mountPath: /var/data, sizeGB: 1}
+databases:
+  - name: webops-db
+    plan: basic-256mb
