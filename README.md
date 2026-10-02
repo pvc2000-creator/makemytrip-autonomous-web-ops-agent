@@ -174,17 +174,3 @@ docs/           architecture, api_reference, browser_policy, demonstration_flow,
 tests/          extraction_tests/, edge_cases/, functional_tests/, browser_tests/
 deployment/     docker/Dockerfile, vercel_notes.md, environment_setup.md
 ```
-
-## Team contribution
-
-| Area | Owner | Scope |
-|---|---|---|
-| Product & demo | _name_ | Workflows, success criteria, demo script |
-| Frontend | _name_ | Operations console |
-| Backend & API | _name_ | Job APIs, orchestrator, data model |
-| AI workflow | _name_ | Planner, reasoning loop, completion |
-| Browser automation | _name_ | Worker, policy engine |
-| Data extraction | _name_ | Schemas, normalizers, validators |
-| QA | _name_ | Test suite, edge cases |
-| Security & compliance | _name_ | Allowlist, RBAC, source governance |
-| Documentation & deployment | _name_ | README, docs, Docker/Render |
