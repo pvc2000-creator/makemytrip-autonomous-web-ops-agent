@@ -59,6 +59,7 @@ python -m playwright install chromium && uvicorn backend.api.main:app --port 800
 | Travel trends | Monitor | Wanderlytics | Destination demand index and events |
 | Catalogue scan | Monitor | books.toscrape.com (real, public) | Opens a category and reads listings across pages (needs internet) |
 | Custom steps | Either | Any allowlisted site | Your own JSON step list |
+| Flight status (live) | Monitor | Aviationstack API (real data) | Calls the Aviationstack API instead of opening a page (no browser needed): records flight number, airline, status, estimated times, delay, terminal and gate for a route such as DEL to BOM, then compares with the last run |
 
 ### Demo websites
 
@@ -159,6 +160,36 @@ tested end to end without scraping third-party sites. Production sources are add
 - Snapshot retention is not yet pruned automatically; add a retention job per `browser_policy.md`.
 - Vector memory (pgvector/Qdrant) is not required for the three core workflows and is not wired in;
   snapshots and records are stored relationally with stable entity keys for comparison.
+
+## Live data: Aviationstack flight status
+
+The **Flight status (live data)** workflow reads real flight data from the [Aviationstack](https://aviationstack.com) API instead of the bundled demo sites. It uses the `fetch_api` action, so no browser is started: the API answer is turned into records and goes through the same extraction, comparison, reasoning and completion steps as every other workflow.
+
+**What it records:** flight number, airline, route, date, status, scheduled or estimated departure and arrival, departure delay in minutes, terminal and gate. This is flight *status*, not fares or availability.
+
+**Setup**
+
+1. Create a free key at aviationstack.com.
+2. Set `AVIATIONSTACK_API_KEY` as an environment variable: in `.env` locally, or under *Environment* on Render. Never commit the key.
+3. Add `api.aviationstack.com` to `DOMAIN_ALLOWLIST` (comma separated, no spaces).
+4. Choose **Flight status (live data)** when creating a task and enter airport codes, for example `DEL` and `BOM`.
+
+**Settings** (all optional except the key)
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `AVIATIONSTACK_API_KEY` | none | Required. Without it the run fails with a clear message; the mock sources still work. |
+| `AVIATIONSTACK_MONTHLY_LIMIT` | 90 | Stops calling the API after this many requests in a month, to protect the free quota (about 100). |
+| `AVIATIONSTACK_CACHE_TTL_MIN` | 60 | Identical queries inside this window are served from a local cache and cost no quota. |
+| `AVIATIONSTACK_ALLOW_HTTP` | false | Allows plain HTTP if the plan refuses HTTPS. The key then travels unencrypted, so use it only for a demo key. |
+
+**Good to know**
+
+- The free plan allows roughly 100 requests a month. The request counter and cache live in the server's temporary folder, so they reset when Render redeploys; check the Aviationstack dashboard for the real count.
+- Do not schedule this workflow more often than once a day on the free plan.
+- Several flight numbers can be one physical flight (codeshares), so identical times and gates across airlines are normal.
+- Times are shown as Aviationstack returns them (labelled `+00:00`); check against the airline before treating them as exact.
+- Code: `backend/services/aviationstack.py` (client, cache, quota guard), the `fetch_api` action in `agents/browser_execution/runner.py`, the `flight_status` schema in `extraction/schemas`, and the workflow in `agents/planner/workflows.py`. Tests: `tests/functional_tests/test_aviationstack.py`.
 
 ## Repository layout
 
