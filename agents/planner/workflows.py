@@ -259,3 +259,32 @@ def resolved_inputs(task) -> dict:
     if "passengers" in out:
         out["passengers"] = str(out["passengers"] or "1")
     return out
+
+# ---- Aviationstack: live flight status (added) ----
+TOOLS["fetch_api"] = "Fetch live flight status from the Aviationstack API (allowlist and monthly quota enforced)"
+WORKFLOWS["flight_status"] = {
+    "kind": "monitor", "label": "Flight status (live data)", "schema": "flight_status",
+    "description": "Real flight status from Aviationstack: schedule, delay, terminal and gate for a route.",
+    "inputs": [{"name": "origin", "label": "From airport code (e.g. DEL)", "default": "DEL"},
+               {"name": "destination", "label": "To airport code (e.g. BOM)", "default": "BOM"},
+               {"name": "limit", "label": "Max flights to read", "default": "10"}],
+    "default_urls": ["https://api.aviationstack.com/v1/flights"],
+}
+
+_build_steps_core = build_steps
+
+
+def build_steps(task):
+    """Adds the API-based flight status workflow; every other workflow uses the original builder."""
+    if task.template != "flight_status":
+        return _build_steps_core(task)
+    inp = dict(task.inputs or {})
+    urls = task.target_urls or WORKFLOWS["flight_status"]["default_urls"]
+    steps = [step("fetch_api", "Fetch live flight status from Aviationstack", urls[0],
+                  dep_iata="{{origin}}", arr_iata="{{destination}}", limit=int(inp.get("limit") or 10)),
+             step("compare", "Compare with the previous run"),
+             step("summarize", "Write the summary"),
+             step("route", f"Deliver to {task.owner_team}")]
+    for n, s in enumerate(steps, 1):
+        s["order"] = n
+    return steps, "flight_status"
