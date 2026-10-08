@@ -573,3 +573,66 @@ class ActionRunner:
             self.vars["approved"] = False
             self.log("policy", f"Not approved: {self.declined}. Stopping before the irreversible step.")
             self._frame("Not approved. Stopped before confirming.", i)
+
+   # ---- Aviationstack: live flight status (added) ----
+def _do_fetch_api(self, i, args, target, step):
+    """Live flight status from Aviationstack, passed through the normal extraction pipeline."""
+    from html import escape
+    from backend.services import aviationstack as av
+    url = render(target or "https://api.aviationstack.com/v1/flights", self.vars)
+    try:
+        policy.check(url, self.pages)
+    except PolicyViolation as e:
+        raise BrowserError("policy_restriction", str(e))
+    dep = str(render(args.get("dep_iata", ""), self.vars)).strip()
+    arr = str(render(args.get("arr_iata", ""), self.vars)).strip()
+    try:
+        rows = av.get_flights(dep_iata=dep or None, arr_iata=arr or None, limit=int(args.get("limit", 10)))
+    except av.MissingApiKey:
+        raise BrowserError("missing_input", "AVIATIONSTACK_API_KEY is not set on this server")
+    except av.QuotaExceeded as e:
+        raise BrowserError("rate_limited_by_source", str(e))
+    except av.AviationstackError as e:
+        raise BrowserError("source_unavailable", str(e))
+    if not rows:
+        raise BrowserError("source_unavailable", "Aviationstack returned no flights for this route")
+    self.pages += 1
+
+    def t(v):
+        return escape(str(v)) if v not in (None, "") else ""
+
+    cards = "".join(
+        '<article class="flight-status">'
+        f'<span class="flight-no">{t(r["flight_iata"])}</span>'
+        f'<span class="airline">{t(r["airline"])}</span>'
+        f'<span class="route" data-route="{t(r["dep_iata"])}-{t(r["arr_iata"])}">{t(r["dep_iata"])} to {t(r["arr_iata"])}</span>'
+        f'<time class="flight-date" data-date="{t(r["flight_date"])}">{t(r["flight_date"])}</time>'
+        f'<span class="status">{t(r["status"])}</span>'
+        f'<span class="depart">{t(r["dep_estimated"] or r["dep_scheduled"])}</span>'
+        f'<span class="arrive">{t(r["arr_estimated"] or r["arr_scheduled"])}</span>'
+        f'<span class="dep-delay">{r["dep_delay_min"] or 0}</span>'
+        f'<span class="gate">{t(r["dep_gate"])}</span>'
+        f'<span class="terminal">{t(r["dep_terminal"])}</span>'
+        '</article>'
+        for r in rows)
+    self._http_url = url
+    self._http_html = ("<html><head><title>Aviationstack flight status</title></head><body><main>"
+                       + cards + "</main></body></html>")
+    self.log("browser", f"Fetched {len(rows)} flights from Aviationstack "
+                        f"({av.requests_used_this_month()} requests used this month)", {"url": url})
+    self._do_extract(i, {"schema": args.get("schema")}, url, step)
+
+
+ActionRunner._do_fetch_api = _do_fetch_api
+
+_original_pick_engine = ActionRunner._pick_engine
+
+
+def _pick_engine_with_api(self):
+    """Workflows that only call an API do not need a browser."""
+    if all(s["tool"] == "fetch_api" or s["tool"] in POST_TOOLS for s in self.steps):
+        return "http"
+    return _original_pick_engine(self)
+
+
+ActionRunner._pick_engine = _pick_engine_with_api
