@@ -212,7 +212,25 @@ SCHEMAS: dict[str, ExtractionSchema] = {
     ),
 }
 
-
+# ---- Aviationstack: live flight status (added) ----
+SCHEMAS["flight_status"] = ExtractionSchema(
+    name="flight_status",
+    item_selectors=["article.flight-status"],
+    entity_fields=["flight_no", "date"],
+    fields={
+        "flight_no": F(selectors=[".flight-no"]),
+        "airline": F(selectors=[".airline"]),
+        "route": F(selectors=["[data-route]"], attr="data-route"),
+        "date": F(selectors=["[data-date]"], attr="data-date", kind="date"),
+        "status": F(selectors=[".status"]),
+        "depart": F(selectors=[".depart"], required=False),
+        "arrive": F(selectors=[".arrive"], required=False),
+        "dep_delay": F(selectors=[".dep-delay"], kind="int", required=False),
+        "gate": F(selectors=[".gate"], required=False),
+        "terminal": F(selectors=[".terminal"], required=False),
+    },
+    compare_fields=["status", "dep_delay", "depart", "gate"],
+)
 def get_schema(name: str) -> ExtractionSchema:
     if name not in SCHEMAS:
         raise KeyError(f"No extraction schema named '{name}'")
