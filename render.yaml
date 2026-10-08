@@ -12,5 +12,7 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: AVIATIONSTACK_API_KEY
+        sync: false
       - key: SNAPSHOT_DIR
         value: /tmp/snapshots
